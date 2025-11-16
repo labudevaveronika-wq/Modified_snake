@@ -17,6 +17,7 @@ class Game:
 
     def run(self):
 
+
     def events(self): # проверять все от клавиш до эффектов
         '''Проверять все события pygame
         Если событие "закрытие окна" - останавливать игру
@@ -34,6 +35,32 @@ class Game:
         Нарисовать змейку (по координатам из snake.position)
         Нарисовать еду (по координатам из food.position)
         Отобразить счет игрока на экране'''
+
+        self.screen.fill(pygame.Color('black')) # залили экран черным
+
+        for position in self.snake.position:
+            square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
+            '''position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
+            position[1] * 40 - координата Y (позиция змейки × 40 пикселей)
+            40, 40 - ширина и высота прямоугольника (40×40 пикселей)'''
+
+            pygame.draw.rect(self.screen, pygame.Color('red'), square)
+            '''self.screen - на каком окне рисовать
+            self.snake.snake_color - каким цветом (зеленый)
+            rect - какой прямоугольник рисовать'''
+
+        food_rect = pygame.Rect(self.food.position[0] * 40, self.food.position[1], 40, 40) # то же самое для еды
+        if self.food.color == "red":
+            color = (255, 0, 0)
+        elif self.food.color == "green":
+            color = (0, 255, 0)
+        else:
+            color = (128, 0, 128)
+
+        pygame.draw.rect(self.screen, color, food_rect) # тут сама отрисовка: где нариосвать, каким цветом, что рисовать
+
+        pygame.display.flip() # тут обновляем экарн
+
 
 
 # Проверка что все создалось
