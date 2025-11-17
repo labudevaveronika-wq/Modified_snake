@@ -1,4 +1,6 @@
 import pygame
+from pygame import K_DOWN
+
 from food import Food
 from sanke import Snake
 
@@ -16,10 +18,14 @@ class Game:
         self.life = True # змея жива или нет True - жива, False - нет
 
     def run(self):
+        '''Таким образом в run только вызов методов'''
         while self.life == True: # проверка на жизнь змеи
-            for event in pygame.event.get(): # проыерить событие: что именно случилось, кнопка или закрытие окна
-                if event.type == pygame.QUIT: # если нажат крестик для закрытия окна
-                    self.life = False
+            self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
+            self.update()
+            self.snake.simple_move() # змея двигается
+            self.draw() # рисуем новый кадр
+            pygame.time.delay(200) # задержка на 200 миллисекунд
+            pygame.display.update()
 
 
 
@@ -28,7 +34,20 @@ class Game:
         Если событие "закрытие окна" - останавливать игру
         Если нажата клавиша - определять какая именно
         Если нажаты стрелки - менять направление змейки'''
-        pass
+        for event in pygame.event.get(): # проыерить событие: что именно случилось, кнопка или закрытие окна
+            if event.type == pygame.QUIT: # если нажат крестик для закрытия окна
+                self.life = False
+            # добавляю управление змеей с помощью кнопок - стрелок
+            # проверка на нажатие стрелок
+            if event.type == pygame.KEYDOWN:
+                if event.type == pygame.K_DOWN:  # вниз
+                    self.snake.moving((0, -1))
+                if event.type == pygame.K_UP:  # вверх
+                    self.snake.moving((0, 1))
+                if event.type == pygame.K_LEFT:  # влево
+                    self.snake.moving((-1, 0))
+                if event.type == pygame.K_RIGHT:  # вправо
+                    self.snake.moving((1, 0))
 
     def update(self):
         '''Двигать змейку вперед
@@ -78,9 +97,8 @@ class Game:
 #print("Счет:", game.ckore)
 
 # тест отрисовки
-game = Game()
-game.run()
-
+#game = Game()
+#game.run()
 # поначалу вот такой вывод для этого теста:
 # pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
 # Hello from the pygame community. https://www.pygame.org/contribute.html
