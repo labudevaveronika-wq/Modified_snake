@@ -170,7 +170,12 @@ class Game:
         Проверять столкновение змейки с едой
         Проверять столкновение змейки с собой или границами
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
-        pass
+        if self.snake.head == self.food.position:
+            food_type = self.food.get_type()
+            self.snake.eat(food_type) # применяем эффект
+            self.food.spawn() # создать новую еду
+            self.ckore += 1 # увеличиваем тест
+
 
     def draw(self):
         '''Залить экран черным цветом
