@@ -1,5 +1,5 @@
 import pygame
-from pygame import K_DOWN
+
 
 from food import Food
 from sanke import Snake
@@ -18,6 +18,8 @@ class Game:
         self.life = True # змея жива или нет True - жива, False - нет
 
     def run(self):
+        print("Змейка:", self.snake.position)
+        print("Еда:", self.food.position)
         '''Таким образом в run только вызов методов'''
         while self.life == True: # проверка на жизнь змеи
             self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
@@ -40,14 +42,17 @@ class Game:
             # добавляю управление змеей с помощью кнопок - стрелок
             # проверка на нажатие стрелок
             if event.type == pygame.KEYDOWN:
-                if event.type == pygame.K_DOWN:  # вниз
+                if event.key == pygame.K_DOWN:  # вниз
+                    self.snake.moving((0, +1))
+                if event.key == pygame.K_UP:  # вверх
                     self.snake.moving((0, -1))
-                if event.type == pygame.K_UP:  # вверх
-                    self.snake.moving((0, 1))
-                if event.type == pygame.K_LEFT:  # влево
+                if event.key == pygame.K_LEFT:  # влево
                     self.snake.moving((-1, 0))
-                if event.type == pygame.K_RIGHT:  # вправо
+                if event.key == pygame.K_RIGHT:  # вправо
                     self.snake.moving((1, 0))
+
+
+            # надо добавить проверку на то, что змея съедает фрукт
 
     def update(self):
         '''Двигать змейку вперед
@@ -70,12 +75,12 @@ class Game:
             position[1] * 40 - координата Y (позиция змейки × 40 пикселей)
             40, 40 - ширина и высота прямоугольника (40×40 пикселей)'''
 
-            pygame.draw.rect(self.screen, pygame.Color('red'), square)
+            pygame.draw.rect(self.screen, pygame.Color('green'), square)
             '''self.screen - на каком окне рисовать
             self.snake.snake_color - каким цветом (зеленый)
             rect - какой прямоугольник рисовать'''
 
-        food_rect = pygame.Rect(self.food.position[0] * 40, self.food.position[1], 40, 40) # то же самое для еды
+        food_rect = pygame.Rect(self.food.position[0] * 40, self.food.position[1] * 40, 40, 40) # то же самое для еды
         if self.food.color == "red":
             color = (255, 0, 0)
         elif self.food.color == "green":
@@ -97,8 +102,8 @@ class Game:
 #print("Счет:", game.ckore)
 
 # тест отрисовки
-#game = Game()
-#game.run()
+game = Game()
+game.run()
 # поначалу вот такой вывод для этого теста:
 # pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
 # Hello from the pygame community. https://www.pygame.org/contribute.html
