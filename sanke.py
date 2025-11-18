@@ -49,6 +49,8 @@ class Snake:
             self.position.append(end)
         if food_type == 'pear':
             self.snake_body -= 1 # Зеленая груша - длина - 1
+            if len(self.position) > self.snake_body:
+                self.position.pop()
         if food_type == 'grape':
             pass
             '''Активация ускорение для змеи'''
