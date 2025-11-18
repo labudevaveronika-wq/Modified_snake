@@ -59,7 +59,7 @@ class Game:
         Проверять столкновение змейки с едой
         Проверять столкновение змейки с собой или границами
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
-        pass
+
 
     def draw(self):
         '''Залить экран черным цветом
@@ -80,17 +80,18 @@ class Game:
             self.snake.snake_color - каким цветом (зеленый)
             rect - какой прямоугольник рисовать'''
 
-        food_rect = pygame.Rect(self.food.position[0] * 40, self.food.position[1] * 40, 40, 40) # то же самое для еды
-        if self.food.color == "red":
-            color = (255, 0, 0)
-        elif self.food.color == "green":
-            color = (0, 255, 0)
-        else:
-            color = (128, 0, 128)
+            for fruit in self.food.get_all_fruits():
+                food_rect = pygame.Rect(fruit['position'][0] * 40, self.food.position[1] * 40, 40, 40) # то же самое для еды
+                if fruit['color'] == "red":
+                    color = (255, 0, 0)
+                elif fruit['color'] == "green":
+                    color = (0, 255, 0)
+                else:
+                    color = (128, 0, 128)
 
-        pygame.draw.rect(self.screen, color, food_rect) # тут сама отрисовка: где нариосвать, каким цветом, что рисовать
+                pygame.draw.rect(self.screen, color, food_rect)
 
-        pygame.display.flip() # тут обновляем экарн
+            pygame.display.flip() # тут обновляем экарн
 
 
 
@@ -137,7 +138,7 @@ class Game:
             self.update()
             self.snake.simple_move() # змея двигается
             self.draw() # рисуем новый кадр
-            pygame.time.delay(200) # задержка на 200 миллисекунд
+            pygame.time.delay(150) # задержка на 200 миллисекунд
             pygame.display.update()
 
 
@@ -170,11 +171,7 @@ class Game:
         Проверять столкновение змейки с едой
         Проверять столкновение змейки с собой или границами
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
-        if self.snake.head == self.food.position:
-            food_type = self.food.get_type()
-            self.snake.eat(food_type) # применяем эффект
-            self.food.spawn() # создать новую еду
-            self.ckore += 1 # увеличиваем тест
+
 
 
     def draw(self):
@@ -196,17 +193,19 @@ class Game:
             self.snake.snake_color - каким цветом (зеленый)
             rect - какой прямоугольник рисовать'''
 
-        food_rect = pygame.Rect(self.food.position[0] * 40, self.food.position[1] * 40, 40, 40) # то же самое для еды
-        if self.food.color == "red":
-            color = (255, 0, 0)
-        elif self.food.color == "green":
-            color = (0, 255, 0)
-        else:
-            color = (128, 0, 128)
+        # так как теперь несколько фруктов, надо отрисовать все
+        for fruit in self.food.get_all_fruits():
+            food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
+            if self.food.color == "red":
+                color = (255, 0, 0)
+            elif self.food.color == "green":
+                color = (0, 255, 0)
+            else:
+                color = (128, 0, 128)
 
-        pygame.draw.rect(self.screen, color, food_rect) # тут сама отрисовка: где нариосвать, каким цветом, что рисовать
+            pygame.draw.rect(self.screen, color, food_rect) # тут сама отрисовка: где нариосвать, каким цветом, что рисовать
 
-        pygame.display.flip() # тут обновляем экарн
+            pygame.display.flip() # тут обновляем экарн
 
 
 
@@ -229,6 +228,6 @@ class Game:
 
 # новый тест
 game = Game()
-print("Змейка:", game.snake.position)
-print("Еда:", game.food.position)
+#print("Змейка:", game.snake.position)
+#print("Еда:", game.food.position)
 game.run()
