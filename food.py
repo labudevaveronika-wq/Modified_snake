@@ -1,33 +1,64 @@
+import time
 from random import *
 
 class Food:
-    def __init__(self, ):
+    def __init__(self, count = 3):
+        self.fruits = []
+
+        for i in range(count):
+            self.fruits.append(self.create_fruit())
+
+
+
         self.position = None
         self.type = None
         self.color = None
-        self.spawn()
 
-    def spawn(self): # появление рандомном месте
+
+    def create_fruit(self):
+        '''Поменяю немного историю создания фруктов.
+        именно тут они будут создаваться, а в spawn именно появляться на поле.
+        '''
         x = randint(0, 14)
         y = randint(0, 14)
-        self.type = choice(["apple", "pear", "grape"])  # сначала выбираем тип
-        self.position = (x, y)
+        fruit_type = choice(["apple", "pear", "grape"])  # сначала выбираем тип
 
         # потом устанавливаем цвет по типу
-        if self.type == "apple":
-            self.color = "red"
-        elif self.type == "pear":
-            self.color = "green"
+        if fruit_type == "apple":
+            color = "red"
+        elif fruit_type == "pear":
+            color = "green"
         else:
-            self.color = "purple"
+            color = "purple"
 
-    def get_position(self): # получить позицию еды
-        return self.position
+        self.position = (x, y)
+
+        return { #возвращаем
+            'position': (x, y),  # координаты
+            'type': fruit_type,  # тип фрукта
+            'color': color  # цвет
+        }
+
+
+    def spawn(self, fruits_index=None): # появление рандомном месте
+        '''Опишем создание и генерацаю трех фруктов на поле'''
+        if fruits_index is not None:
+            self.fruits[fruits_index] = self.create_fruit()
+        else:
+            self.fruits.append(self.create_fruit())
+
+
+
+    def get_all_fruits(self): # Возвращает все фрукты
+        return self.fruits
 
     def get_type(self): # получить тип еды для обработки эффект на змею
         return self.type
 
-# Тест
+    def remove_fruits(self): # тут будет происходить удаление фрукта по его позиции и возвращение его типа
+        pass
+
+## Тест
 #food = Food()
 #print("Позиция еды:", food.get_position())
 #print("Тип еды:", food.get_type())
@@ -43,3 +74,10 @@ class Food:
 #    food_type = food.get_type()         # что съела?
 #    snake.eat(food_type)               # применить эффект
 #    food.spawn()                       # создать новую еду
+
+# я захотела генерить несколько фруктов, например 3
+# возникла проблема, что они все одинаковые появляются, и я решила проблему в лоб
+#
+#
+#
+#
