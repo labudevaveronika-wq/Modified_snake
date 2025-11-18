@@ -45,6 +45,8 @@ class Snake:
         Обновление счетчика очков для комбо-еды.'''
         if food_type == 'apple':
             self.snake_body += 1 # Красное яблоко - длина + 1
+            end = self.position[-1]
+            self.position.append(end)
         if food_type == 'pear':
             self.snake_body -= 1 # Зеленая груша - длина - 1
         if food_type == 'grape':
