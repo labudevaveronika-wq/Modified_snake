@@ -9,21 +9,24 @@ class Food:
             self.fruits.append(self.create_fruit())
 
 
-
-        self.position = None
-        self.type = None
-        self.color = None
-
-
     def create_fruit(self):
         '''Поменяю немного историю создания фруктов.
         именно тут они будут создаваться, а в spawn именно появляться на поле.
         '''
         x = randint(0, 14)
         y = randint(0, 14)
-        fruit_type = choice(["apple", "pear", "grape"])  # сначала выбираем тип
 
         # потом устанавливаем цвет по типу
+        # вроде гарантированный вариант разного цвета
+        if len(self.fruits) == 0:
+            fruit_type = "apple"
+        elif len(self.fruits) == 1:
+            fruit_type = "pear"
+        elif len(self.fruits) == 2:
+            fruit_type = "grape"
+        else:
+            fruit_type = choice(["apple", "pear", "grape"])
+
         if fruit_type == "apple":
             color = "red"
         elif fruit_type == "pear":
@@ -31,14 +34,11 @@ class Food:
         else:
             color = "purple"
 
-        self.position = (x, y)
-
-        return { #возвращаем
-            'position': (x, y),  # координаты
-            'type': fruit_type,  # тип фрукта
-            'color': color  # цвет
+        return {
+            'position': (x, y),
+            'type': fruit_type,
+            'color': color
         }
-
 
     def spawn(self, fruits_index=None): # появление рандомном месте
         '''Опишем создание и генерацаю трех фруктов на поле'''
