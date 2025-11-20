@@ -64,7 +64,7 @@ class Game:
             if self.snake.head == fruit['position']:
                 food_type = fruit['type']
                 self.snake.eat(food_type)
-                self.food.spawn()
+                self.food.spawn(i) # замена того фрукта, который съели и добавили новый
                 self.ckore += 1
                 break
         if not self.snake.state():
