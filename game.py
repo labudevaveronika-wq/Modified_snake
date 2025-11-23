@@ -81,6 +81,12 @@ class Game:
 
         self.screen.fill(pygame.Color('black')) # залили экран черным
 
+        # отрисовка препятствий
+        for obstacle in self.obstacles.get_all_obstacles():
+            obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
+            pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
+
+
         for position in self.snake.position:
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
             '''position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
@@ -92,18 +98,20 @@ class Game:
             self.snake.snake_color - каким цветом (зеленый)
             rect - какой прямоугольник рисовать'''
 
-            for fruit in self.food.get_all_fruits():
-                food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
-                if fruit['color'] == "red":
-                    color = (255, 0, 0)
-                elif fruit['color'] == "green":
-                    color = (0, 255, 0)
-                else:
-                    color = (128, 0, 128)
+        for fruit in self.food.get_all_fruits():
+            food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
+            if fruit['color'] == "red":
+                color = (255, 0, 0)
+            elif fruit['color'] == "green":
+                color = (0, 255, 0)
+            else:
+                color = (128, 0, 128)
 
-                pygame.draw.rect(self.screen, color, food_rect)
+            pygame.draw.rect(self.screen, color, food_rect)
 
-            pygame.display.flip() # тут обновляем экарн
+
+
+        pygame.display.flip() # тут обновляем экарн
 
 
 
