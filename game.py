@@ -73,7 +73,11 @@ class Game:
                 break
 
         for obstacle in self.obstacles.get_all_obstacles():
-            if self.snake.head == obstacle['position']:
+            head_rect = pygame.Rect(self.snake.head[0] * 40, self.snake.head[1] * 40, 40, 40)
+            obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
+
+
+            if head_rect.colliderect(obstacle_rect):
                 self.life = False
                 break
 
