@@ -2,6 +2,7 @@ import pygame
 
 
 from food import Food
+from obstacle import Obstacle
 from sanke import Snake
 
 class Game:
@@ -12,6 +13,7 @@ class Game:
         # создадим объекты: сама змея, еда
         self.food = Food()
         self.snake = Snake()
+        self.obstacles = Obstacle()
 
         self.ckore = 0 # счет игрока, начало с нуля
 
@@ -19,13 +21,14 @@ class Game:
 
     def run(self):
         '''Таким образом в run только вызов методов'''
+        clock = pygame.time.Clock()
         while self.life == True: # проверка на жизнь змеи
             self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
-            self.snake.simple_move() # змея двигается
             self.update()
+            self.snake.simple_move()  # змея двигается
             self.draw() # рисуем новый кадр
-            pygame.time.delay(200) # задержка на 200 миллисекунд
-
+#            pygame.time.delay(200) # задержка на 200 миллисекунд
+            clock.tick(5)
 
 
 
