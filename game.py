@@ -24,8 +24,8 @@ class Game:
         clock = pygame.time.Clock()
         while self.life == True: # проверка на жизнь змеи
             self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
-            self.update()
             self.snake.simple_move()  # змея двигается
+            self.update()
             self.draw() # рисуем новый кадр
 #            pygame.time.delay(200) # задержка на 200 миллисекунд
             clock.tick(5)
@@ -59,6 +59,7 @@ class Game:
         '''Двигать змейку вперед
         Проверять столкновение змейки с едой
         Проверять столкновение змейки с собой или границами
+        Проверять столкновение с препятсвием.
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
 
         # проверка на столкновение с любым фруктом
@@ -70,6 +71,12 @@ class Game:
                 self.food.spawn(i) # замена того фрукта, который съели и добавили новый
                 self.ckore += 1
                 break
+
+        for obstacle in self.obstacles.get_all_obstacles():
+            if self.snake.head == obstacle['position']:
+                self.life = False
+                break
+
         if not self.snake.state():
             self.life = False
 
