@@ -27,8 +27,12 @@ class Game:
             self.snake.simple_move()  # змея двигается
             self.update()
             self.draw() # рисуем новый кадр
-#            pygame.time.delay(200) # задержка на 200 миллисекунд
-            clock.tick(5)
+
+
+            if self.snake.flag_acceleration:
+                clock.tick(10)
+            else:
+                clock.tick(5)
 
 
 
@@ -61,7 +65,7 @@ class Game:
         Проверять столкновение змейки с собой или границами
         Проверять столкновение с препятсвием.
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
-
+        self.snake.update_boost()
         # проверка на столкновение с любым фруктом
         fruits = self.food.get_all_fruits()
         for i, fruit in enumerate(fruits):
@@ -120,7 +124,14 @@ class Game:
 
             pygame.draw.rect(self.screen, color, food_rect)
 
+        for position in self.snake.position:
+            if self.snake.flag_acceleration:
+                color = (0, 255, 0)  # ярко-зеленый при ускорении
+            else:
+                color = (0, 200, 0)  # обычный зеленый
 
+            square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
+            pygame.draw.rect(self.screen, color, square)
 
         pygame.display.flip() # тут обновляем экарн
 

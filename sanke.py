@@ -1,12 +1,17 @@
+import time
+
+
 class Snake:
     def __init__(self):
         self.snake_body = 3
-        self.snake_color = (0, 255, 0)
+        self.snake_color = (0, 200, 0)
         self.hight_table = 15
         self.size_table = 15
         self.position = [(10, 10), (9, 10), (8, 10)]
         self.head = self.position[0]
         self.direction = (1, 0)
+        self.flag_acceleration = False
+        self.acceleration_end_time = time.time() + 10
 
     def state(self, ):
         '''Здесь будет статус сотояния тела в поле.
@@ -52,23 +57,12 @@ class Snake:
             if len(self.position) > self.snake_body:
                 self.position.pop()
         if food_type == 'grape':
-            pass
+            self.flag_acceleration = True
+            self.acceleration_end_time = time.time() + 10
             '''Активация ускорение для змеи'''
 
         return  food_type
         '''Возвращение эффекта для вижуала змеи.'''
-
-
-    def drow(self, ):
-        '''Здесь отрисовка поля, змеи, яблок и тд.
-        Отображение змеи по координатам.
-        Отображение поля, еды и стен с границами.'''
-
-        '''Сетка 15*15'''
-        '''Квадратики для змеи на поле в ячейках по значению self.position'''
-        '''Голова чуть другого оттенка, в сравнении с телом'''
-        '''Еда и границы'''
-        pass
 
 
     def moving(self, direction_type):
@@ -78,6 +72,11 @@ class Snake:
 
         if (direction_type[0] * -1, direction_type[1] * -1) != self.direction: # Проверка разворота на 180°
             self.direction = direction_type # Обновление направления
+
+    def update_boost(self):
+        if self.flag_acceleration and time.time() > self.acceleration_end_time:
+            self.flag_acceleration = False
+
 
 
 # Простой тест
