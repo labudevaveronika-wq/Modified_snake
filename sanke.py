@@ -1,5 +1,7 @@
 import time
 
+import pygame
+
 
 class Snake:
     def __init__(self):
@@ -7,7 +9,10 @@ class Snake:
         self.snake_color = (0, 200, 0)
         self.hight_table = 15
         self.size_table = 15
-        self.position = [(10, 10), (9, 10), (8, 10)]
+
+        center_x = self.size_table // 2
+        center_y = self.hight_table // 2
+        self.position = [(center_x, center_y), (center_x - 1, center_y), (center_x - 2, center_y)]
         self.head = self.position[0]
         self.direction = (1, 0)
         self.flag_acceleration = False
