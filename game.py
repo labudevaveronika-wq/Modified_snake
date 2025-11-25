@@ -7,7 +7,7 @@ from sanke import Snake
 
 class Game:
     def __init__(self):
-        self.screen = pygame.display.set_mode((600, 600)) # Создали окно 600x600 пикселей
+        self.screen = pygame.display.set_mode((700, 700)) # Создали окно 600x600 пикселей
         pygame.display.set_caption('Snake') # название окна
 
         # создадим объекты: сама змея, еда
@@ -74,7 +74,13 @@ class Game:
                 self.snake.eat(food_type)
                 self.food.spawn(i) # замена того фрукта, который съели и добавили новый
                 self.ckore += 1
+
+                self.snake.evolution_score += 1
+                if self.snake.evolution_score >= 10:  # каждые 10 очков
+                    self.snake.evolve()
+                    self.snake.evolution_score = 0  # сбрасываем счетчик
                 break
+
 
         for obstacle in self.obstacles.get_all_obstacles():
             head_rect = pygame.Rect(self.snake.head[0] * 40, self.snake.head[1] * 40, 40, 40)
@@ -129,6 +135,18 @@ class Game:
                 color = (0, 255, 0)  # ярко-зеленый при ускорении
             else:
                 color = (0, 200, 0)  # обычный зеленый
+
+            square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
+            pygame.draw.rect(self.screen, color, square)
+
+        for position in self.snake.position:
+            # Используем цвет эволюции
+            if self.snake.flag_acceleration:
+                color = (min(255, self.snake.snake_color[0] + 50),
+                         min(255, self.snake.snake_color[1] + 50),
+                         min(255, self.snake.snake_color[2] + 50))  # ярче при ускорении
+            else:
+                color = self.snake.snake_color  # обычный цвет эволюции
 
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
             pygame.draw.rect(self.screen, color, square)

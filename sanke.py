@@ -1,21 +1,25 @@
 import time
 from random import randint
 
-import pygame
-
 
 class Snake:
     def __init__(self):
         self.snake_body = 3
         self.snake_color = (0, 200, 0)
-        self.hight_table = 15
-        self.size_table = 15
+        self.hight_table = 20
+        self.size_table = 20
 
         center_x = self.size_table // 2
         center_y = self.hight_table // 2
         self.position = [(center_x, center_y), (center_x - 1, center_y), (center_x - 2, center_y)]
         self.head = self.position[0]
         self.direction = (1, 0)
+
+        self.evolution_stage = 0
+        self.evolution_score = 0
+        self.evolution_colors = self.get_evolution_color(10)
+        self.snake_color = self.evolution_colors[0]
+
         self.flag_acceleration = False
         self.acceleration_end_time = time.time() + 10
 
@@ -27,8 +31,8 @@ class Snake:
         if self.head in self.position[1::]:
             return False # змея мертва (врезалась в себя)'
 
-        if (self.head[0] < 0 or self.head[0] >= self.size_table) or (self.head[1] < 0 or self.head[1] >= self.size_table):
-            return False # змея мертва (вне поля)
+#        if (self.head[0] < 0 or self.head[0] >= self.size_table) or (self.head[1] < 0 or self.head[1] >= self.size_table):
+#            return False # змея мертва (вне поля)
 
         return True # Все хорошо змея жива, пока что...'
 
@@ -41,6 +45,10 @@ class Snake:
         Обновлять переменную self.head.'''
         nx = self.head[0] + self.direction[0] # Обновление позиции головы по х
         ny = self.head[1] + self.direction[1] # Обновление позиции головы по у
+
+        # телепортация через границы
+        nx = nx % self.size_table
+        ny = ny % self.hight_table
 
         self.position.insert(0, (nx, ny)) # Добавление "новой головы" в змею
 
@@ -91,15 +99,21 @@ class Snake:
             (100, 100, 100) # серый - препятствия
         ]
 
-        evolution_color = []
+        evolution_colors = []
         for i in range(count):
             while True:
                 color = (randint(50, 200), randint(50, 200), randint(50, 200))
                 if color not in not_have:
-                    evolution_color.append(color)
+                    evolution_colors.append(color)
                     break
 
-        return evolution_color
+        return evolution_colors
+
+    def evolve(self):
+        if self.evolution_stage < len(self.evolution_colors) - 1:
+            self.evolution_stage += 1
+            self.snake_color = self.evolution_colors[self.evolution_stage]
+
 
 
 
