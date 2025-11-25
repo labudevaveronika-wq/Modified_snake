@@ -13,7 +13,8 @@ class Obstacle:
         y = randint(0, 14)
 
         if snake_positions:
-            while (x, y) in snake_positions:
+            #препятствие могло заспавниться в препятствии
+            while (x, y) in snake_positions or (x, y) in self.obstacles:
                 y = randint(0, 14)
                 x = randint(0, 14)
 
