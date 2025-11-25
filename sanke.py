@@ -1,4 +1,5 @@
 import time
+from random import randint
 
 import pygame
 
@@ -81,6 +82,24 @@ class Snake:
     def update_boost(self):
         if self.flag_acceleration and time.time() > self.acceleration_end_time:
             self.flag_acceleration = False
+
+    def get_evolution_color(self, count = 10):
+        not_have = [
+            (255, 0, 0),    # красный - яблоко
+            (0, 255, 0),    # зеленый - груша
+            (128, 0, 128),  # фиолетовый - виноград
+            (100, 100, 100) # серый - препятствия
+        ]
+
+        evolution_color = []
+        for i in range(count):
+            while True:
+                color = (randint(50, 200), randint(50, 200), randint(50, 200))
+                if color not in not_have:
+                    evolution_color.append(color)
+                    break
+
+        return evolution_color
 
 
 
