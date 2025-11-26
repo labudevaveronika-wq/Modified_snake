@@ -11,9 +11,10 @@ class Game:
         pygame.display.set_caption('Snake') # название окна
 
         # создадим объекты: сама змея, еда
-        self.food = Food()
         self.snake = Snake()
         self.obstacles = Obstacle()
+        self.food = Food()
+        #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
         self.ckore = 0 # счет игрока, начало с нуля
 
