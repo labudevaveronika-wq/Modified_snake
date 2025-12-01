@@ -1,5 +1,4 @@
 from random import *
-from sanke import Snake
 
 class Obstacle:
     def __init__(self, count = 7, snake_positions=None):

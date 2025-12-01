@@ -1,9 +1,9 @@
-import pygame
-
-
 from food import Food
 from obstacle import Obstacle
 from sanke import Snake
+import time
+import pygame
+
 
 class Game:
     def __init__(self):

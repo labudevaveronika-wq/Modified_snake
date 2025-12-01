@@ -1,6 +1,5 @@
+from random import *
 import time
-from random import randint
-
 
 class Snake:
     def __init__(self):
