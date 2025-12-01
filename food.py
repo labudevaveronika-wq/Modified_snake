@@ -1,5 +1,4 @@
 from random import *
-from obstacle import Obstacle
 
 class Food:
     def __init__(self, count = 3, obstacles=None):
@@ -44,12 +43,12 @@ class Food:
             'color': color
         }
 
-    def spawn(self, fruits_index=None): # появление рандомном месте
+    def spawn(self, fruits_index=None, obstacles=None): # появление рандомном месте
         '''Опишем создание и генерацаю трех фруктов на поле'''
         if fruits_index is not None:
-            self.fruits[fruits_index] = self.create_fruit()
+            self.fruits[fruits_index] = self.create_fruit(obstacles)
         else:
-            self.fruits.append(self.create_fruit())
+            self.fruits.append(self.create_fruit(obstacles))
 
 
 

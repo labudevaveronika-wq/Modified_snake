@@ -16,7 +16,6 @@ class Obstacle:
             while (x, y) in snake_positions or (x, y) in self.obstacles:
                 y = randint(0, 14)
                 x = randint(0, 14)
-
         width = 40
         hight = 40
 
