@@ -27,7 +27,9 @@ class Snake:
         Проверка на столкновение: жива или нет.
         Проверка выхода за границы.'''
 
-        if self.head in self.position[1::]:
+        #это весёлая ошибка
+        #когда змея длины 1 съедает яблоко она умирает из за плохо прописанного условия
+        if (self.head in self.position[1::] and self.snake_body!=2):
             return False # змея мертва (врезалась в себя)'
 
 #        if (self.head[0] < 0 or self.head[0] >= self.size_table) or (self.head[1] < 0 or self.head[1] >= self.size_table):
@@ -66,7 +68,9 @@ class Snake:
             end = self.position[-1]
             self.position.append(end)
         if food_type == 'pear':
-            self.snake_body -= 1 # Зеленая груша - длина - 1
+            #змейка длины 0 конечно весело но я это исправлю наверное
+            if (self.snake_body>1):    
+                self.snake_body -= 1 # Зеленая груша - длина - 1
             if len(self.position) > self.snake_body:
                 self.position.pop()
         if food_type == 'grape':
@@ -82,9 +86,15 @@ class Snake:
         '''Обработка изменения направления.
         Проверка разворота на 180.
         Обновление self.direction'''
+        '''всё равно можно было повернуть на 180 и самоубиться
+        теперь по идеи незя наверное...'''
+        if len(self.position)!=1:
+           if (direction_type[0]+self.head[0], direction_type[1]+self.head[1]) != self.position[1]: # Проверка разворота на 180°
+                self.direction = direction_type # Обновление направления
+        else:
+            if (direction_type[0] * -1, direction_type[1] * -1) != self.direction: # Проверка разворота на 180°
+                self.direction = direction_type # Обновление направления
 
-        if (direction_type[0] * -1, direction_type[1] * -1) != self.direction: # Проверка разворота на 180°
-            self.direction = direction_type # Обновление направления
 
     def update_boost(self):
         if self.flag_acceleration and time.time() > self.acceleration_end_time:

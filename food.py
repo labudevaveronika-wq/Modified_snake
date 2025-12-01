@@ -1,20 +1,25 @@
 from random import *
+from obstacle import Obstacle
 
 class Food:
-    def __init__(self, count = 3):
+    def __init__(self, count = 3, obstacles=None):
         self.fruits = []
 
         for i in range(count):
-            self.fruits.append(self.create_fruit())
+            self.fruits.append(self.create_fruit(obstacles))
 
 
-    def create_fruit(self):
+    def create_fruit(self,obstacles=None):
         '''Поменяю немного историю создания фруктов.
         именно тут они будут создаваться, а в spawn именно появляться на поле.
         '''
+        '''фрукт мог заспавниться в стене или в другом фрукте'''
         x = randint(0, 14)
         y = randint(0, 14)
-
+        if (obstacles):
+            while (x, y) in obstacles or (x,y) in self.fruits:
+                    y = randint(0, 14)
+                    x = randint(0, 14)
         # потом устанавливаем цвет по типу
         # вроде гарантированный вариант разного цвета
         if len(self.fruits) == 0:
