@@ -19,6 +19,8 @@ class Game:
         self.ckore = 0 # счет игрока, начало с нуля
 
         self.life = True # змея жива или нет True - жива, False - нет
+        
+        self.level = level_num
 
     def run(self):
         '''Таким образом в run только вызов методов'''
