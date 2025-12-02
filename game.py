@@ -4,6 +4,8 @@ from sanke import Snake
 import time
 import pygame
 from portals import Portals
+from moving_obstacle import MovingObstacle
+
 
 class Game:
     def __init__(self):
