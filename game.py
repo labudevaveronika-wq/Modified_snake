@@ -152,6 +152,10 @@ class Game:
             if exit_point is not None:
                 self.snake.position[0] = exit_point
                 self.snake.head = exit_point
+
+        # ----- Движущееся препятствие (уровень 3) -----
+        if self.level == 3 and self.moving_obstacle is not None:
+            self.moving_obstacle.update()
         
         # проверка на столкновение с любым фруктом
         fruits = self.food.get_all_fruits()
