@@ -16,11 +16,17 @@ class Game:
         self.food = Food()
         #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
+        self.level = level_num
+    
+        if self.level == 2:
+            self.portals = Portals()
+        else:
+            self.portals = None
+        
         self.ckore = 0 # счет игрока, начало с нуля
 
         self.life = True # змея жива или нет True - жива, False - нет
-        
-        self.level = level_num
+
 
     def run(self):
         '''Таким образом в run только вызов методов'''
