@@ -131,6 +131,21 @@ class Game:
         self.snake.update_boost()
 
         exit_point = None
+
+        # ----- Проверка столкновения с движущимся препятствием -----
+        if self.level == 3 and self.moving_obstacle is not None:
+            if self.snake.head == self.moving_obstacle.get_position():
+                self.lives -= 1
+                if self.lives <= 0:
+                    self.life = False
+                else:
+                    # Сбрасываем змею в центр
+                    cx = self.snake.size_table // 2
+                    cy = self.snake.hight_table // 2
+                    self.snake.position = [(cx, cy), (cx - 1, cy), (cx - 2, cy)]
+                    self.snake.head = (cx, cy)
+                return
+        
         # проверка на столкновение с любым фруктом
         fruits = self.food.get_all_fruits()
         for i, fruit in enumerate(fruits):
