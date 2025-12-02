@@ -145,6 +145,13 @@ class Game:
                     self.snake.position = [(cx, cy), (cx - 1, cy), (cx - 2, cy)]
                     self.snake.head = (cx, cy)
                 return
+
+        # ----- ПОРТАЛЫ (уровень 2) -----
+        if self.level == 2 and self.portals is not None:
+            exit_point = self.portals.check_teleport(self.snake.head)
+            if exit_point is not None:
+                self.snake.position[0] = exit_point
+                self.snake.head = exit_point
         
         # проверка на столкновение с любым фруктом
         fruits = self.food.get_all_fruits()
