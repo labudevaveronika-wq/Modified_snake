@@ -8,26 +8,78 @@ from moving_obstacle import MovingObstacle
 
 
 class Game:
-    def __init__(self):
-        self.screen = pygame.display.set_mode((700, 700)) # Создали окно 600x600 пикселей
-        pygame.display.set_caption('Snake') # название окна
+    def __init__(self, level_num=1):
+        self.screen = pygame.display.set_mode((700, 700))
+        pygame.display.set_caption("Snake")
+
+        # текущий уровень (1 / 2 / 3)
+        self.level = level_num
+
+        # создать змейку, еду, статичные препятствия
+        self.snake = Snake()
+
+        # статичные препятствия — всегда есть
+        self.obstacles = Obstacle()
+
+        # еда
+        self.food = Food()
+
+        # ЖИЗНИ
+        if self.level == 3:
+            self.lives = 3
+        else:
+            self.lives = 1
+
+        # ПОРТАЛЫ (только уровень 2)
+        if self.level == 2:
+            from portals import Portals
+
+            self.portals = Portals()
+        else:
+            self.portals = None
+
+        # ДВИЖУЩЕЕСЯ ПРЕПЯТСТВИЕ (только уровень 3)
+        if self.level == 3:
+            from moving_obstacle import MovingObstacle
+
+            self.moving_obstacle = MovingObstacle()
+        else:
+            self.moving_obstacle = None
+
+        # Счётчик очков
+        self.ckore = 0
+
+        # Флаг «змейка жива»
+        self.life = True
+
+        self.screen = pygame.display.set_mode(
+            (700, 700)
+        )  # Создали окно 600x600 пикселей
+        pygame.display.set_caption("Snake")  # название окна
 
         # создадим объекты: сама змея, еда
         self.snake = Snake()
         self.obstacles = Obstacle()
         self.food = Food()
-        #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
+        # сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
         self.level = level_num
-    
+
         if self.level == 2:
             self.portals = Portals()
         else:
             self.portals = None
-        
-        self.ckore = 0 # счет игрока, начало с нуля
 
-        self.life = True # змея жива или нет True - жива, False - нет
+        if self.level == 3:
+            self.moving_obstacle = MovingObstacle()
+            self.lives = 3  # 3 жизни
+        else:
+            self.moving_obstacle = None
+            self.lives = 1
+
+        self.ckore = 0  # счет игрока, начало с нуля
+
+        self.life = True  # змея жива или нет True - жива, False - нет
 
 
     def run(self):
