@@ -129,6 +129,8 @@ class Game:
         Проверять столкновение с препятсвием.
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
         self.snake.update_boost()
+
+        exit_point = None
         # проверка на столкновение с любым фруктом
         fruits = self.food.get_all_fruits()
         for i, fruit in enumerate(fruits):
