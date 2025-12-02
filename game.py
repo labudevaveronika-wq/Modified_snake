@@ -186,35 +186,47 @@ class Game:
             self.life = False
 
     def draw(self):
-        '''Залить экран черным цветом
+        """Залить экран черным цветом
         Нарисовать змейку (по координатам из snake.position)
         Нарисовать еду (по координатам из food.position)
-        Отобразить счет игрока на экране'''
+        Отобразить счет игрока на экране"""
 
-        self.screen.fill(pygame.Color('black')) # залили экран черным
+        self.screen.fill(pygame.Color("black"))  # залили экран черным
 
         # отрисовка препятствий
         for obstacle in self.obstacles.get_all_obstacles():
-            obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
-            pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
-
+            obstacle_rect = pygame.Rect(
+                obstacle["position"][0] * 40,
+                obstacle["position"][1] * 40,
+                obstacle["width"],
+                obstacle["height"],
+            )
+            pygame.draw.rect(self.screen, obstacle["color"], obstacle_rect)
 
         for position in self.snake.position:
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
-            '''position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
+            """position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
             position[1] * 40 - координата Y (позиция змейки × 40 пикселей)
-            40, 40 - ширина и высота прямоугольника (40×40 пикселей)'''
+            40, 40 - ширина и высота прямоугольника (40×40 пикселей)"""
 
-            pygame.draw.rect(self.screen, pygame.Color('green'), square)
-            '''self.screen - на каком окне рисовать
+            pygame.draw.rect(self.screen, pygame.Color("green"), square)
+            """self.screen - на каком окне рисовать
             self.snake.snake_color - каким цветом (зеленый)
-            rect - какой прямоугольник рисовать'''
+            rect - какой прямоугольник рисовать"""
+
+        # ----- Отрисовка движущегося препятствия -----
+        if self.level == 3 and self.moving_obstacle is not None:
+            ox, oy = self.moving_obstacle.get_position()
+            rect = pygame.Rect(ox * 40, oy * 40, 40, 40)
+            pygame.draw.rect(self.screen, (200, 200, 50), rect)
 
         for fruit in self.food.get_all_fruits():
-            food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
-            if fruit['color'] == "red":
+            food_rect = pygame.Rect(
+                fruit["position"][0] * 40, fruit["position"][1] * 40, 40, 40
+            )  # то же самое для еды
+            if fruit["color"] == "red":
                 color = (255, 0, 0)
-            elif fruit['color'] == "green":
+            elif fruit["color"] == "green":
                 color = (0, 255, 0)
             else:
                 color = (128, 0, 128)
@@ -233,16 +245,34 @@ class Game:
         for position in self.snake.position:
             # Используем цвет эволюции
             if self.snake.flag_acceleration:
-                color = (min(255, self.snake.snake_color[0] + 50),
-                         min(255, self.snake.snake_color[1] + 50),
-                         min(255, self.snake.snake_color[2] + 50))  # ярче при ускорении
+                color = (
+                    min(255, self.snake.snake_color[0] + 50),
+                    min(255, self.snake.snake_color[1] + 50),
+                    min(255, self.snake.snake_color[2] + 50),
+                )  # ярче при ускорении
             else:
                 color = self.snake.snake_color  # обычный цвет эволюции
+
+            if self.level == 2 and self.portals is not None:
+                pa, pb = self.portals.get_portals()
+
+                # отрисовать порталы голубым цветом
+                pygame.draw.rect(
+                    self.screen,
+                    (0, 0, 255),
+                    pygame.Rect(pa[0] * 40, pa[1] * 40, 40, 40),
+                )
+
+                pygame.draw.rect(
+                    self.screen,
+                    (0, 0, 200),
+                    pygame.Rect(pb[0] * 40, pb[1] * 40, 40, 40),
+                )
 
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
             pygame.draw.rect(self.screen, color, square)
 
-        pygame.display.flip() # тут обновляем экарн
+        pygame.display.flip()  # тут обновляем экарн
 
 
 
