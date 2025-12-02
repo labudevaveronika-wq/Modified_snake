@@ -3,7 +3,7 @@ from obstacle import Obstacle
 from sanke import Snake
 import time
 import pygame
-
+from portals import Portals
 
 class Game:
     def __init__(self):
