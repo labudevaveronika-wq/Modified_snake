@@ -18,11 +18,12 @@ class Game:
         # создать змейку, еду, статичные препятствия
         self.snake = Snake()
 
+
         # статичные препятствия — всегда есть
-        self.obstacles = Obstacle()
+        self.obstacles = Obstacle(7, self.snake.position)
 
         # еда
-        self.food = Food()
+        self.food = Food(3, self.obstacles.obstacles)
 
         # ЖИЗНИ
         if self.level == 3:
@@ -58,9 +59,7 @@ class Game:
         pygame.display.set_caption("Snake")  # название окна
 
         # создадим объекты: сама змея, еда
-        self.snake = Snake()
-        self.obstacles = Obstacle(7, self.snake.position)
-        self.food = Food(3, self.obstacles.obstacles)
+
         # сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
         self.level = level_num
@@ -76,8 +75,6 @@ class Game:
         else:
             self.moving_obstacle = None
             self.lives = 1
-       
-        #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
         self.ckore = 0  # счет игрока, начало с нуля
 
