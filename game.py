@@ -12,8 +12,8 @@ class Game:
 
         # создадим объекты: сама змея, еда
         self.snake = Snake()
-        self.obstacles = Obstacle()
-        self.food = Food()
+        self.obstacles = Obstacle(7, self.snake.position)
+        self.food = Food(3, self.obstacles.obstacles)
         #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
         self.ckore = 0 # счет игрока, начало с нуля
@@ -73,7 +73,7 @@ class Game:
             if self.snake.head == fruit['position']:
                 food_type = fruit['type']
                 self.snake.eat(food_type)
-                self.food.spawn(i) # замена того фрукта, который съели и добавили новый
+                self.food.spawn(i,self.obstacles.obstacles) # замена того фрукта, который съели и добавили новый
                 self.ckore += 1
 
                 self.snake.evolution_score += 1
@@ -105,8 +105,13 @@ class Game:
 
         # отрисовка препятствий
         for obstacle in self.obstacles.get_all_obstacles():
-            obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
-            pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
+            #эту строчку удалить
+            #obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
+            image = pygame.image.load('obstacle.png').convert_alpha()
+            new_image = pygame.transform.scale(image, (40, 40))
+            self.screen.blit(new_image, (obstacle['position'][0] * 40, obstacle['position'][1] * 40))
+            #эту строчку надо удалить
+            #pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
 
 
         for position in self.snake.position:
@@ -121,15 +126,20 @@ class Game:
             rect - какой прямоугольник рисовать'''
 
         for fruit in self.food.get_all_fruits():
-            food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
+            #эту строчку надо удалить
+            #food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
             if fruit['color'] == "red":
-                color = (255, 0, 0)
+                image = pygame.image.load('apple.png').convert_alpha()
+                new_image = pygame.transform.scale(image, (40, 40))
             elif fruit['color'] == "green":
-                color = (0, 255, 0)
+                image = pygame.image.load('pear.png').convert_alpha()
+                new_image = pygame.transform.scale(image, (40, 40))
             else:
-                color = (128, 0, 128)
-
-            pygame.draw.rect(self.screen, color, food_rect)
+                image = pygame.image.load('grape.png').convert_alpha()
+                new_image = pygame.transform.scale(image, (40, 40))
+            self.screen.blit(new_image, (fruit['position'][0] * 40, fruit['position'][1] * 40))
+            #эту строчку надо удалить
+            #pygame.draw.rect(self.screen, color, food_rect)
 
         for position in self.snake.position:
             if self.snake.flag_acceleration:
