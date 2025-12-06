@@ -82,19 +82,38 @@ class Game:
 
 
     def run(self):
-        '''Таким образом в run только вызов методов'''
         clock = pygame.time.Clock()
-        while self.life == True: # проверка на жизнь змеи
-            self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
-            self.snake.simple_move()  # змея двигается
-            self.update()
-            self.draw() # рисуем новый кадр
+        start_time = time.time()
+        attempts = 1
 
+        while self.life:
+            self.events()
+            self.snake.simple_move()
+            self.update()
+            self.draw()
 
             if self.snake.flag_acceleration:
                 clock.tick(10)
             else:
                 clock.tick(5)
+
+        # ПОСЛЕ смерти — показать меню
+        play_time = time.time() - start_time
+
+        menu = GameOverScreen(self.screen)
+        action = menu.show(score=self.ckore, attempts=attempts, play_time=play_time)
+
+        if action == "retry":
+            return Game(self.level).run()
+
+        if action == "menu":
+            from level_interface import main_menu
+
+            return main_menu()
+
+        if action == "exit":
+            pygame.quit()
+            exit()
 
 
 
