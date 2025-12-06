@@ -5,10 +5,12 @@ import time
 
 class MovingObstacle:
     """
-    Движущееся препятствие.
-    Появляется на одной из граней карты и движется внутрь поля.
-    Движется 1 клетку каждые 10 секунд.
-    Когда достигает противоположной границы — исчезает.
+    Движущееся препятствие:
+    - появляется на одном из краёв поля
+    - ждёт 2 секунды
+    - движется 5 секунд до противоположного края
+    - исчезает и создаётся заново
+    - не появляется во фруктах
     """
 
     def __init__(self, width=15, height=15):
@@ -16,61 +18,92 @@ class MovingObstacle:
         self.height = height
 
         self.position = None
+        self.start_position = None
         self.direction = None
-        self.last_move_time = time.time()
 
-        self.generate()
+        self.phase = "wait"  # wait → move
+        self.spawn_time = time.time()
+        self.move_start = None
 
-    # ------------------------------------------------------
-    # Генерация препятствия
-    # ------------------------------------------------------
-    def generate(self):
-        """Создаёт препятствие на одном из краёв карты."""
+        self.wait_time = 2  # стоим 2 секунды
+        self.total_travel_time = 5  # едем 5 секунд
 
-        side = randint(1, 4)
+        self.generate([])  # создаём впервые
 
-        if side == 1:  # сверху (y = 0)
-            self.position = (randint(0, self.width - 1), 0)
-            self.direction = (0, +1)  # вниз
+    # ---------------------------------------------------------
+    def generate(self, forbidden_positions):
+        """Создаёт препятствие на краю, не заспавнившись во фрукте."""
+        while True:
+            side = randint(1, 4)
 
-        elif side == 2:  # снизу (y = height-1)
-            self.position = (randint(0, self.width - 1), self.height - 1)
-            self.direction = (0, -1)  # вверх
+            if side == 1:  # сверху
+                pos = (randint(0, self.width - 1), 0)
+                direction = (0, +1)
 
-        elif side == 3:  # слева (x = 0)
-            self.position = (0, randint(0, self.height - 1))
-            self.direction = (+1, 0)  # вправо
+            elif side == 2:  # снизу
+                pos = (randint(0, self.width - 1), self.height - 1)
+                direction = (0, -1)
 
-        elif side == 4:  # справа (x = width-1)
-            self.position = (self.width - 1, randint(0, self.height - 1))
-            self.direction = (-1, 0)  # влево
+            elif side == 3:  # слева
+                pos = (0, randint(0, self.height - 1))
+                direction = (+1, 0)
 
-        self.last_move_time = time.time()
+            else:  # справа
+                pos = (self.width - 1, randint(0, self.height - 1))
+                direction = (-1, 0)
 
-    # ------------------------------------------------------
-    # Логика движения
-    # ------------------------------------------------------
-    def update(self):
-        """Каждые 10 секунд двигает препятствие на 1 клетку."""
+            if pos not in forbidden_positions:
+                break
 
-        if time.time() - self.last_move_time < 10:
-            return  # ещё не пора двигаться
+        self.position = pos
+        self.start_position = pos
+        self.direction = direction
 
-        self.last_move_time = time.time()
+        self.phase = "wait"
+        self.spawn_time = time.time()
+        self.move_start = None
 
-        x, y = self.position
-        dx, dy = self.direction
+    # ---------------------------------------------------------
+    def update(self, forbidden_positions):
+        """Управляет фазами движения препятствия."""
+        now = time.time()
 
-        new_x = x + dx
-        new_y = y + dy
-
-        # Если выходит за границу — препятствие исчезает и пересоздаётся.
-        if new_x < 0 or new_x >= self.width or new_y < 0 or new_y >= self.height:
-            self.generate()
+        # ---- Фаза ожидания ----
+        if self.phase == "wait":
+            if now - self.spawn_time >= self.wait_time:
+                self.phase = "move"
+                self.move_start = now
             return
 
-        self.position = (new_x, new_y)
+        # ---- Фаза движения ----
+        if self.phase == "move":
+            elapsed = now - self.move_start
 
-    # ------------------------------------------------------
+            if elapsed >= self.total_travel_time:
+                # закончил движение → пересоздаём
+                self.generate(forbidden_positions)
+                return
+
+            # вычисляем дистанцию от старта
+            px, py = self.start_position
+            dx, dy = self.direction
+
+            if dx != 0:
+                distance = self.width - 1
+            else:
+                distance = self.height - 1
+
+            # доля пути (0..1)
+            t = elapsed / self.total_travel_time
+            t = max(0, min(1, t))
+
+            shift = int(distance * t)
+
+            self.position = (px + dx * shift, py + dy * shift)
+
+    # ---------------------------------------------------------
     def get_position(self):
-        return self.position
+        """Возвращает целочисленную координату."""
+        if self.position is None:
+            return None
+        return (int(self.position[0]), int(self.position[1]))
