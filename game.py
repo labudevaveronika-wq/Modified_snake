@@ -3,12 +3,20 @@ from obstacle import Obstacle
 from sanke import Snake
 import time
 import pygame
+from snake_database import SnakeDatabase
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, level = 1):
+        pygame.init()
         self.screen = pygame.display.set_mode((700, 700)) # Создали окно 600x600 пикселей
         pygame.display.set_caption('Snake') # название окна
+
+        # Шрифты для отображения счета, уровня и жизней
+        self.font = pygame.font.Font(None, 36)  # ← ДОБАВЬТЕ ЭТО!
+        self.big_font = pygame.font.Font(None, 48)  # Для большего текста
+
+        self.level = level
 
         # создадим объекты: сама змея, еда
         self.snake = Snake()
@@ -16,24 +24,122 @@ class Game:
         self.food = Food()
         #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
 
-        self.ckore = 0 # счет игрока, начало с нуля
+        self.score = 0 # счет игрока, начало с нуля
 
         self.life = True # змея жива или нет True - жива, False - нет
+
+        self.score = 0  # текущий счёт
+        self.start_time = 0  # время начала игры
+        self.player_name = "Гость"  # имя игрока
+        self.is_game_over = False  # флаг завершения игры
+        self.play_time = 0  # время игры в секундах
+
+        self.db = SnakeDatabase()
 
     def run(self):
         '''Таким образом в run только вызов методов'''
         clock = pygame.time.Clock()
+
+        if not self.player_name or self.player_name == "Гость":
+            self.show_name_input_screen()
+
+        self.start_time = time.time()
+
         while self.life == True: # проверка на жизнь змеи
             self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
             self.snake.simple_move()  # змея двигается
             self.update()
             self.draw() # рисуем новый кадр
 
+            if not self.snake.state():
+                self.handle_game_over()
+                return
 
             if self.snake.flag_acceleration:
                 clock.tick(10)
             else:
                 clock.tick(5)
+
+#    def prtals_movement_in_space(self):
+
+    def handle_game_over(self):
+        self.game_over = True
+#        self.game_over_reason = reason
+        self.total_play_time = int(time.time() - self.start_time)
+
+        if self.player_name != "Гость":
+            self.save_game_result()
+
+        self.life = False
+        self.show_game_over_screen()
+        self.show_game_over_menu()
+
+    def save_game_result(self):
+        try:
+            success = self.db.save_game_result(
+                username=self.player_name,
+                score=self.score,
+                play_time=self.total_play_time
+            )
+            return success
+        except Exception as e:
+            print(f"Ошибка сохранения: {e}")
+            return False
+
+    def show_game_over_screen(self):
+        self.screen.fill(pygame.Color('black'))
+
+        title = self.big_font.render("ИГРА ОКОНЧЕНА", True, (255,0,0))
+        self.screen.blit(title, (250,100))
+
+        current_status = [
+            f"Текущая игра:",
+            f"Игрок: {self.player_name}",
+            f"Счёт: {self.score}",  # или self.skore/ckore
+            f"Длина змеи: {self.snake.snake_body}",
+            f"Время: {self.total_play_time} сек"
+        ]
+
+        player_status = self.get_player_status_from_db()
+
+        y_pos = 170
+        for line in current_status:
+            text = self.font.render(line, True, (255, 255, 255))
+            self.screen.blit(text, (250, y_pos))
+            y_pos += 40
+
+        # 2. Отобразить player_status если есть
+        if player_status:
+            y_pos += 20
+            db_stats = [
+                f"Общая статистика:",
+                f"Лучший результат: {player_status.get('best_score', 0)}",
+                f"Всего очков: {player_status.get('total_score', 0)}",
+                f"Игр сыграно: {player_status.get('games_played', 0)}",
+                f"Общее время: {player_status.get('total_time', 0)} сек"
+            ]
+
+            for line in db_stats:
+                text = self.font.render(line, True, (100, 200, 255))
+                self.screen.blit(text, (250, y_pos))
+                y_pos += 40
+
+        # 3. Обновить экран
+        pygame.display.flip()
+
+        # 4. Пауза
+        pygame.time.wait(3000)
+
+
+
+    def get_player_status_from_db(self):
+        if self.player_name == "Гость":
+            return None
+
+        try:
+            return self.db.get_player_status(self.player_name)
+        except Exception as e:
+            return None
 
 
 
@@ -74,7 +180,12 @@ class Game:
                 food_type = fruit['type']
                 self.snake.eat(food_type)
                 self.food.spawn(i) # замена того фрукта, который съели и добавили новый
-                self.ckore += 1
+                if food_type == 'apple':
+                    self.score += 10
+                elif food_type == 'pear':
+                    self.score += 5
+                elif food_type == 'grape':
+                    self.score += 15
 
                 self.snake.evolution_score += 1
                 if self.snake.evolution_score >= 10:  # каждые 10 очков
@@ -94,6 +205,7 @@ class Game:
 
         if not self.snake.state():
             self.life = False
+
 
     def draw(self):
         '''Залить экран черным цветом
@@ -151,6 +263,9 @@ class Game:
 
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
             pygame.draw.rect(self.screen, color, square)
+
+
+
 
         pygame.display.flip() # тут обновляем экарн
 

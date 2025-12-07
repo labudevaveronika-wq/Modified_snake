@@ -1,5 +1,7 @@
 from random import *
 import time
+import pygame
+from snake_database import SnakeDatabase
 
 class Snake:
     def __init__(self):
