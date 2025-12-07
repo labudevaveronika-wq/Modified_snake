@@ -19,12 +19,7 @@ class Obstacle:
         width = 40
         hight = 40
 
-        return {
-            'position': (x, y),
-            'width': width,
-            'height': hight,
-            'color': (100, 100, 100),
-        }
+        return (x,y)
 
     def get_all_obstacles(self):
         return self.obstacles

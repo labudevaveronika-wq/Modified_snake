@@ -8,10 +8,11 @@ class Portals:
     После каждого использования порталы пересоздаются в новых местах.
     """
 
-    def __init__(self, width=15, height=15):
+    def __init__(self,obstacles=None, width=15, height=15):
         self.width = width
         self.height = height
 
+        self.obstacles=obstacles
         # Две точки портала
         self.portal_a = None
         self.portal_b = None
@@ -22,12 +23,14 @@ class Portals:
         """Генерирует две новые разные клетки порталов."""
         ax = randint(0, self.width - 1)
         ay = randint(0, self.height - 1)
-
+        while (ax, ay) in self.obstacles:
+            ax = randint(0, self.width - 1)
+            ay = randint(0, self.height - 1)
         bx = randint(0, self.width - 1)
         by = randint(0, self.height - 1)
 
         # Порталы не должны совпадать
-        while bx == ax and by == ay:
+        while (bx == ax and by == ay) or (bx, by) in self.obstacles:
             bx = randint(0, self.width - 1)
             by = randint(0, self.height - 1)
 

@@ -4,8 +4,10 @@ class Food:
     def __init__(self, count = 3, obstacles=None):
         self.fruits = []
 
+        self.obstacles=obstacles
+
         for i in range(count):
-            self.fruits.append(self.create_fruit(obstacles))
+            self.fruits.append(self.create_fruit())
 
 
     def create_fruit(self,obstacles=None):
@@ -15,10 +17,10 @@ class Food:
         '''фрукт мог заспавниться в стене или в другом фрукте'''
         x = randint(0, 14)
         y = randint(0, 14)
-        if (obstacles):
-            while (x, y) in obstacles or (x,y) in self.fruits:
-                    y = randint(0, 14)
-                    x = randint(0, 14)
+        print(obstacles)
+        while (x, y) in self.obstacles or (x,y) in self.fruits:
+                y = randint(0, 14)
+                x = randint(0, 14)
         # потом устанавливаем цвет по типу
         # вроде гарантированный вариант разного цвета
         if len(self.fruits) == 0:
@@ -46,17 +48,14 @@ class Food:
     def spawn(self, fruits_index=None, obstacles=None): # появление рандомном месте
         '''Опишем создание и генерацаю трех фруктов на поле'''
         if fruits_index is not None:
-            self.fruits[fruits_index] = self.create_fruit(obstacles)
+            self.fruits[fruits_index] = self.create_fruit()
         else:
-            self.fruits.append(self.create_fruit(obstacles))
+            self.fruits.append(self.create_fruit())
 
 
 
     def get_all_fruits(self): # Возвращает все фрукты
         return self.fruits
-
-    def get_type(self): # получить тип еды для обработки эффект на змею
-        return self.type
 
     def remove_fruits(self): # тут будет происходить удаление фрукта по его позиции и возвращение его типа
         pass
