@@ -21,7 +21,6 @@ class SnakeDatabase:
                 score_all INTEGER DEFAULT 0,
                 time_all INTEGER DEFAULT 0,
                 best_score INTEGER DEFAULT 0,
-                games_played INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_played TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -92,3 +91,5 @@ class SnakeDatabase:
                 'total_time': result[3]
             }
         return None
+
+

@@ -4,6 +4,7 @@ from sanke import Snake
 import time
 import pygame
 from snake_database import SnakeDatabase
+from menu import GameOverScreen
 
 
 class Game:
@@ -13,12 +14,13 @@ class Game:
         pygame.display.set_caption('Snake') # название окна
 
         # Шрифты для отображения счета, уровня и жизней
-        self.font = pygame.font.Font(None, 36)  # ← ДОБАВЬТЕ ЭТО!
+        self.font = pygame.font.Font(None, 36)
         self.big_font = pygame.font.Font(None, 48)  # Для большего текста
 
         self.level = level
 
-        # создадим объекты: сама змея, еда
+        # создадим объекты: сама
+        # змея, еда
         self.snake = Snake()
         self.obstacles = Obstacle()
         self.food = Food()
@@ -36,12 +38,20 @@ class Game:
 
         self.db = SnakeDatabase()
 
+        self.game_over_screen = GameOverScreen(self.screen)
+
     def run(self):
         '''Таким образом в run только вызов методов'''
         clock = pygame.time.Clock()
 
-        if not self.player_name or self.player_name == "Гость":
-            self.show_name_input_screen()
+        if self.player_name == "Гость":
+            name = self.game_over_screen.show_name_input()
+            if name:
+                self.player_name = name
+                if self.player_name != "Гость":
+                    self.db.add_player(self.player_name)
+            else:
+                return
 
         self.start_time = time.time()
 
@@ -62,6 +72,66 @@ class Game:
 
 #    def prtals_movement_in_space(self):
 
+    def show_name_input_screen(self):
+        """Экран ввода имени игрока"""
+        self.screen.fill((0, 0, 0))  # чёрный фон
+
+        # Заголовок
+        title = self.big_font.render("ВВЕДИТЕ ВАШЕ ИМЯ", True, (255, 255, 255))
+        self.screen.blit(title, (200, 100))
+
+        # Инструкция
+        instruction = self.font.render("Напишите имя и нажмите Enter", True, (200, 200, 200))
+        self.screen.blit(instruction, (200, 200))
+
+        # Поле для ввода
+        input_box = pygame.Rect(200, 300, 300, 50)
+        pygame.draw.rect(self.screen, (255, 255, 255), input_box, 2)
+
+        # Текст в поле
+        input_text = ""
+
+        pygame.display.flip()
+
+        # Обработка ввода
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:  # Enter
+                        waiting = False
+                    elif event.key == pygame.K_BACKSPACE:  # Backspace
+                        input_text = input_text[:-1]
+                    else:
+                        # Добавляем символ
+                        if len(input_text) < 15:
+                            input_text += event.unicode
+
+            # Обновляем отображение текста
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(title, (200, 100))
+            self.screen.blit(instruction, (200, 200))
+            pygame.draw.rect(self.screen, (255, 255, 255), input_box, 2)
+
+            # Текст в поле ввода
+            text_surface = self.font.render(input_text, True, (255, 255, 255))
+            self.screen.blit(text_surface, (210, 310))
+
+            pygame.display.flip()
+
+        # Сохраняем имя
+        if input_text.strip():
+            self.player_name = input_text.strip()
+            # Добавляем игрока в базу
+            self.db.add_player(self.player_name)
+        else:
+            self.player_name = "Гость"
+
+
     def handle_game_over(self):
         self.game_over = True
 #        self.game_over_reason = reason
@@ -74,6 +144,9 @@ class Game:
         self.show_game_over_screen()
         self.show_game_over_menu()
 
+    def show_game_over_screen(self):
+        self.screen.fill(pygame.Color('black'))
+
     def save_game_result(self):
         try:
             success = self.db.save_game_result(
@@ -83,7 +156,6 @@ class Game:
             )
             return success
         except Exception as e:
-            print(f"Ошибка сохранения: {e}")
             return False
 
     def show_game_over_screen(self):
