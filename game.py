@@ -3,32 +3,63 @@ from obstacle import Obstacle
 from sanke import Snake
 import time
 import pygame
+from portals import Portals
+from moving_obstacle import MovingObstacle
+from game_over_screen import GameOverScreen
 from snake_database import SnakeDatabase
 from menu import GameOverScreen
 
 
 class Game:
-    def __init__(self, level = 1):
-        pygame.init()
-        self.screen = pygame.display.set_mode((700, 700)) # Создали окно 600x600 пикселей
-        pygame.display.set_caption('Snake') # название окна
+    def __init__(self, level_num=1):
+        # Основные настройки окна
+        self.screen = pygame.display.set_mode((700, 700))
+        pygame.display.set_caption("Snake")
 
-        # Шрифты для отображения счета, уровня и жизней
-        self.font = pygame.font.Font(None, 36)
-        self.big_font = pygame.font.Font(None, 48)  # Для большего текста
+        # Уровень
+        self.level = level_num
 
-        self.level = level
-
-        # создадим объекты: сама
-        # змея, еда
+        # --- Создаём змейку ---
         self.snake = Snake()
-        self.obstacles = Obstacle()
-        self.food = Food()
-        #сделал так чтобы еда спавнилась ПОСЛЕ стен объяснения в файле с едой
+
+        # --- Статичные препятствия ---
+        # (7 случайных блоков, не должны появляться в змейке)
+        self.obstacles = Obstacle(7, self.snake.position)
+
+        # --- Фрукты ---
+        # генерация 3 фруктов, не появляющихся в препятствиях
+        self.food = Food(3, self.obstacles.obstacles)
+
+        # --- Жизни ---
+        if self.level == 3:
+            self.lives = 3
+        else:
+            self.lives = 1
 
         self.score = 0 # счет игрока, начало с нуля
+        # --- Порталы (только уровень 2) ---
+        if self.level == 2:
+            from portals import Portals
 
-        self.life = True # змея жива или нет True - жива, False - нет
+            self.portals = Portals()
+        else:
+            self.portals = None
+
+        # --- Движущееся препятствие (уровень 3) ---
+        if self.level == 3:
+            from moving_obstacle import MovingObstacle
+
+            self.moving_obstacle = MovingObstacle()
+
+            # позиции фруктов → запрещённые точки
+            fruit_positions = [f["position"] for f in self.food.get_all_fruits()]
+            self.moving_obstacle.generate(fruit_positions)
+        else:
+            self.moving_obstacle = None
+
+        # --- ИГРОВЫЕ ПАРАМЕТРЫ ---
+        self.ckore = 0  # счёт
+        self.life = True  # жива ли змейка
 
         self.score = 0  # текущий счёт
         self.start_time = 0  # время начала игры
@@ -58,7 +89,14 @@ class Game:
         while self.life == True: # проверка на жизнь змеи
             self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
             self.snake.simple_move()  # змея двигается
+        start_time = time.time()
+        attempts = 1
+
+        while self.life:
+            self.events()
+            self.snake.simple_move()
             self.update()
+            self.draw()
             self.draw() # рисуем новый кадр
 
             if not self.snake.state():
@@ -70,158 +108,35 @@ class Game:
             else:
                 clock.tick(5)
 
-#    def prtals_movement_in_space(self):
+        # ПОСЛЕ смерти — показать меню
+        play_time = time.time() - start_time
 
-    def show_name_input_screen(self):
-        """Экран ввода имени игрока"""
-        self.screen.fill((0, 0, 0))  # чёрный фон
+        menu = GameOverScreen(self.screen)
+        action = menu.show(score=self.ckore, attempts=attempts, play_time=play_time)
 
-        # Заголовок
-        title = self.big_font.render("ВВЕДИТЕ ВАШЕ ИМЯ", True, (255, 255, 255))
-        self.screen.blit(title, (200, 100))
+        if action == "retry":
+            return Game(self.level).run()
 
-        # Инструкция
-        instruction = self.font.render("Напишите имя и нажмите Enter", True, (200, 200, 200))
-        self.screen.blit(instruction, (200, 200))
+        if action == "menu":
+            from level_interface import main_menu
 
-        # Поле для ввода
-        input_box = pygame.Rect(200, 300, 300, 50)
-        pygame.draw.rect(self.screen, (255, 255, 255), input_box, 2)
+            return main_menu()
 
-        # Текст в поле
-        input_text = ""
+        if action == "exit":
+            pygame.quit()
+            exit()
 
-        pygame.display.flip()
-
-        # Обработка ввода
-        waiting = True
-        while waiting:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:  # Enter
-                        waiting = False
-                    elif event.key == pygame.K_BACKSPACE:  # Backspace
-                        input_text = input_text[:-1]
-                    else:
-                        # Добавляем символ
-                        if len(input_text) < 15:
-                            input_text += event.unicode
-
-            # Обновляем отображение текста
-            self.screen.fill((0, 0, 0))
-            self.screen.blit(title, (200, 100))
-            self.screen.blit(instruction, (200, 200))
-            pygame.draw.rect(self.screen, (255, 255, 255), input_box, 2)
-
-            # Текст в поле ввода
-            text_surface = self.font.render(input_text, True, (255, 255, 255))
-            self.screen.blit(text_surface, (210, 310))
-
-            pygame.display.flip()
-
-        # Сохраняем имя
-        if input_text.strip():
-            self.player_name = input_text.strip()
-            # Добавляем игрока в базу
-            self.db.add_player(self.player_name)
-        else:
-            self.player_name = "Гость"
-
-
-    def handle_game_over(self):
-        self.game_over = True
-#        self.game_over_reason = reason
-        self.total_play_time = int(time.time() - self.start_time)
-
-        if self.player_name != "Гость":
-            self.save_game_result()
-
-        self.life = False
-        self.show_game_over_screen()
-        self.show_game_over_menu()
-
-    def show_game_over_screen(self):
-        self.screen.fill(pygame.Color('black'))
-
-    def save_game_result(self):
-        try:
-            success = self.db.save_game_result(
-                username=self.player_name,
-                score=self.score,
-                play_time=self.total_play_time
-            )
-            return success
-        except Exception as e:
-            return False
-
-    def show_game_over_screen(self):
-        self.screen.fill(pygame.Color('black'))
-
-        title = self.big_font.render("ИГРА ОКОНЧЕНА", True, (255,0,0))
-        self.screen.blit(title, (250,100))
-
-        current_status = [
-            f"Текущая игра:",
-            f"Игрок: {self.player_name}",
-            f"Счёт: {self.score}",  # или self.skore/ckore
-            f"Длина змеи: {self.snake.snake_body}",
-            f"Время: {self.total_play_time} сек"
-        ]
-
-        player_status = self.get_player_status_from_db()
-
-        y_pos = 170
-        for line in current_status:
-            text = self.font.render(line, True, (255, 255, 255))
-            self.screen.blit(text, (250, y_pos))
-            y_pos += 40
-
-        # 2. Отобразить player_status если есть
-        if player_status:
-            y_pos += 20
-            db_stats = [
-                f"Общая статистика:",
-                f"Лучший результат: {player_status.get('best_score', 0)}",
-                f"Всего очков: {player_status.get('total_score', 0)}",
-                f"Игр сыграно: {player_status.get('games_played', 0)}",
-                f"Общее время: {player_status.get('total_time', 0)} сек"
-            ]
-
-            for line in db_stats:
-                text = self.font.render(line, True, (100, 200, 255))
-                self.screen.blit(text, (250, y_pos))
-                y_pos += 40
-
-        # 3. Обновить экран
-        pygame.display.flip()
-
-        # 4. Пауза
-        pygame.time.wait(3000)
-
-
-
-    def get_player_status_from_db(self):
-        if self.player_name == "Гость":
-            return None
-
-        try:
-            return self.db.get_player_status(self.player_name)
-        except Exception as e:
-            return None
-
-
-
-    def events(self): # проверять все от клавиш до эффектов
-        '''Проверять все события pygame
+    def events(self):  # проверять все от клавиш до эффектов
+        """Проверять все события pygame
         Если событие "закрытие окна" - останавливать игру
         Если нажата клавиша - определять какая именно
-        Если нажаты стрелки - менять направление змейки'''
-        for event in pygame.event.get(): # проыерить событие: что именно случилось, кнопка или закрытие окна
-            if event.type == pygame.QUIT: # если нажат крестик для закрытия окна
+        Если нажаты стрелки - менять направление змейки"""
+        for (
+            event
+        ) in (
+            pygame.event.get()
+        ):  # проыерить событие: что именно случилось, кнопка или закрытие окна
+            if event.type == pygame.QUIT:  # если нажат крестик для закрытия окна
                 self.life = False
             # добавляю управление змеей с помощью кнопок - стрелок
             # проверка на нажатие стрелок
@@ -248,8 +163,8 @@ class Game:
         # проверка на столкновение с любым фруктом
         fruits = self.food.get_all_fruits()
         for i, fruit in enumerate(fruits):
-            if self.snake.head == fruit['position']:
-                food_type = fruit['type']
+            if self.snake.head == fruit["position"]:
+                food_type = fruit["type"]
                 self.snake.eat(food_type)
                 self.food.spawn(i) # замена того фрукта, который съели и добавили новый
                 if food_type == 'apple':
@@ -258,6 +173,10 @@ class Game:
                     self.score += 5
                 elif food_type == 'grape':
                     self.score += 15
+                self.food.spawn(
+                    i, self.obstacles.obstacles
+                )  # замена того фрукта, который съели и добавили новый
+
 
                 self.snake.evolution_score += 1
                 if self.snake.evolution_score >= 10:  # каждые 10 очков
@@ -265,11 +184,16 @@ class Game:
                     self.snake.evolution_score = 0  # сбрасываем счетчик
                 break
 
-
         for obstacle in self.obstacles.get_all_obstacles():
-            head_rect = pygame.Rect(self.snake.head[0] * 40, self.snake.head[1] * 40, 40, 40)
-            obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
-
+            head_rect = pygame.Rect(
+                self.snake.head[0] * 40, self.snake.head[1] * 40, 40, 40
+            )
+            obstacle_rect = pygame.Rect(
+                obstacle["position"][0] * 40,
+                obstacle["position"][1] * 40,
+                obstacle["width"],
+                obstacle["height"],
+            )
 
             if head_rect.colliderect(obstacle_rect):
                 self.life = False
@@ -277,7 +201,6 @@ class Game:
 
         if not self.snake.state():
             self.life = False
-
 
     def draw(self):
         '''Залить экран черным цветом
@@ -289,31 +212,50 @@ class Game:
 
         # отрисовка препятствий
         for obstacle in self.obstacles.get_all_obstacles():
-            obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
-            pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
-
+            # эту строчку удалить
+            # obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
+            image = pygame.image.load("obstacle.png").convert_alpha()
+            new_image = pygame.transform.scale(image, (40, 40))
+            self.screen.blit(
+                new_image, (obstacle["position"][0] * 40, obstacle["position"][1] * 40)
+            )
+            # эту строчку надо удалить
+            # pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
 
         for position in self.snake.position:
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
-            '''position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
+            """position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
             position[1] * 40 - координата Y (позиция змейки × 40 пикселей)
-            40, 40 - ширина и высота прямоугольника (40×40 пикселей)'''
+            40, 40 - ширина и высота прямоугольника (40×40 пикселей)"""
 
-            pygame.draw.rect(self.screen, pygame.Color('green'), square)
-            '''self.screen - на каком окне рисовать
+            pygame.draw.rect(self.screen, pygame.Color("green"), square)
+            """self.screen - на каком окне рисовать
             self.snake.snake_color - каким цветом (зеленый)
-            rect - какой прямоугольник рисовать'''
+            rect - какой прямоугольник рисовать"""
+
+        # ----- Отрисовка движущегося препятствия -----
+        if self.level == 3 and self.moving_obstacle is not None:
+            ox, oy = self.moving_obstacle.get_position()
+            rect = pygame.Rect(ox * 40, oy * 40, 40, 40)
+            pygame.draw.rect(self.screen, (200, 200, 50), rect)
 
         for fruit in self.food.get_all_fruits():
-            food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
-            if fruit['color'] == "red":
-                color = (255, 0, 0)
-            elif fruit['color'] == "green":
-                color = (0, 255, 0)
+            # эту строчку надо удалить
+            # food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
+            if fruit["color"] == "red":
+                image = pygame.image.load("apple.png").convert_alpha()
+                new_image = pygame.transform.scale(image, (40, 40))
+            elif fruit["color"] == "green":
+                image = pygame.image.load("pear.png").convert_alpha()
+                new_image = pygame.transform.scale(image, (40, 40))
             else:
-                color = (128, 0, 128)
-
-            pygame.draw.rect(self.screen, color, food_rect)
+                image = pygame.image.load("grape.png").convert_alpha()
+                new_image = pygame.transform.scale(image, (40, 40))
+            self.screen.blit(
+                new_image, (fruit["position"][0] * 40, fruit["position"][1] * 40)
+            )
+            # эту строчку надо удалить
+            # pygame.draw.rect(self.screen, color, food_rect)
 
         for position in self.snake.position:
             if self.snake.flag_acceleration:
@@ -327,32 +269,47 @@ class Game:
         for position in self.snake.position:
             # Используем цвет эволюции
             if self.snake.flag_acceleration:
-                color = (min(255, self.snake.snake_color[0] + 50),
-                         min(255, self.snake.snake_color[1] + 50),
-                         min(255, self.snake.snake_color[2] + 50))  # ярче при ускорении
+                color = (
+                    min(255, self.snake.snake_color[0] + 50),
+                    min(255, self.snake.snake_color[1] + 50),
+                    min(255, self.snake.snake_color[2] + 50),
+                )  # ярче при ускорении
             else:
                 color = self.snake.snake_color  # обычный цвет эволюции
+
+            if self.level == 2 and self.portals is not None:
+                pa, pb = self.portals.get_portals()
+
+                # отрисовать порталы голубым цветом
+                pygame.draw.rect(
+                    self.screen,
+                    (0, 0, 255),
+                    pygame.Rect(pa[0] * 40, pa[1] * 40, 40, 40),
+                )
+
+                pygame.draw.rect(
+                    self.screen,
+                    (0, 0, 200),
+                    pygame.Rect(pb[0] * 40, pb[1] * 40, 40, 40),
+                )
 
             square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
             pygame.draw.rect(self.screen, color, square)
 
-
-
-
-        pygame.display.flip() # тут обновляем экарн
+        pygame.display.flip()  # тут обновляем экарн
 
 
 
 # Проверка что все создалось
-#game = Game()
-#print("Окно создано!")
-#print("Змейка создана:", game.snake)
-#print("Еда создана:", game.food)
-#print("Счет:", game.ckore)
+# game = Game()
+# print("Окно создано!")
+# print("Змейка создана:", game.snake)
+# print("Еда создана:", game.food)
+# print("Счет:", game.ckore)
 
 # тест отрисовки
-#game = Game()
-#game.run()
+# game = Game()
+# game.run()
 # поначалу вот такой вывод для этого теста:
 # pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
 # Hello from the pygame community. https://www.pygame.org/contribute.html
@@ -360,12 +317,13 @@ class Game:
 # это по идее можно исправить с помощью изменения метода run
 # Получилось, появляется черное окно и висит до закрытия
 # новый тест
-game = Game()
-#print("Змейка:", game.snake.position)
-#print("Еда:", game.food.position)
-game.run()
+# print("Змейка:", game.snake.position)
+# print("Еда:", game.food.position)
+
+from level_interface import main_menu
+
+if __name__ == "__main__":
+    main_menu()
 
 # обнаружена проблема (неточность): фрукты должны исчезать моментально как только змея на них наедет, но у меня так не происходит. Пытаемся исправить. змея двигается юлагодаря методу Run, а взимодействие с едой осуществляется в spawn, надо поменять порядок их осществления
 # Проблема решена: в run изменили порядок методов
-
-
