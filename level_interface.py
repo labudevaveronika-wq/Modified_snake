@@ -24,45 +24,45 @@ def draw_text(text, pos, color=(255, 255, 255)):
     SCREEN.blit(FONT.render(text, True, color), pos)
 
 
-def draw_menu():
-    SCREEN.fill((0, 0, 0))
-    SCREEN.blit(BIG.render("ВЫБЕРИТЕ УРОВЕНЬ", True, (255, 255, 0)), (160, 100))
-
-    draw_text("1 — Уровень 1: еда + статичные препятствия", (100, 200))
-    draw_text("2 — Уровень 2: + порталы", (100, 260))
-    draw_text("3 — Уровень 3: + движущееся препятствие (3 жизни)", (100, 320))
-
-    draw_text("Esc — выйти", (100, 420))
-    pygame.display.flip()
 
 
-def main_menu():
+def main_menu(screen=None):
     """Отображает меню и запускает выбранный уровень."""
+    if screen is None:
+        screen = pygame.display.set_mode((800, 800))
+        pygame.display.set_caption("Snake — выбор уровня")
+
+
     while True:
-        draw_menu()
+        screen.fill((0, 0, 0))
+        screen.blit(BIG.render("ВЫБЕРИТЕ УРОВЕНЬ", True, (255, 255, 0)), (160, 100))
+
+        draw_text("1 — Уровень 1: еда + статичные препятствия", (100, 200))
+        draw_text("2 — Уровень 2: + порталы", (100, 260))
+        draw_text("3 — Уровень 3: + движущееся препятствие (3 жизни)", (100, 320))
+        draw_text("Нажмите 1, 2 или 3 для выбора", (100, 400))
+        draw_text("Esc — отмена", (100, 440))
+
+        pygame.display.flip()
+
+        # Обработка событий
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                return
+                return None
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    return
-                if event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
-                    from game import (
-                        Game,
-                    )  # ← ленивый импорт (исправляет циклический импорт)
+                    return None
                 if event.key == pygame.K_1:
-                    game = Game(level_num=1)
-                    game.run()
+                    return 1
                 if event.key == pygame.K_2:
-                    game = Game(level_num=2)
-                    game.run()
+                    return 2
                 if event.key == pygame.K_3:
-                    game = Game(level_num=3)
-                    game.run()
+                     return 3
+def show_level_selection(screen):
+    """Показать экран выбора уровня и вернуть выбранный уровень"""
+    return main_menu(screen)
 
 
-if __name__ == "__main__":
-    main_menu()
+# if __name__ == "__main__":
+#     main_menu()
 

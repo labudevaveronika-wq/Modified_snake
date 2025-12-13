@@ -1,12 +1,19 @@
 from random import *
 import time
-import pygame
-from snake_database import SnakeDatabase
 
 class Snake:
     def __init__(self):
+        '''Инциализируем: Начальная длина змейки,
+         Начальный цвет (зеленый),
+         Высота игрового поля, ширина поля,
+         начальная позиция змеи (головы),
+         список-тело змеи,
+         система эволюции: счет, 10 цветов эволюции, текущий нулевой цвет,
+         флаг для ускорения,
+         время окончанич ускорения'''
+
+
         self.snake_body = 3
-        self.snake_color = (0, 200, 0)
         self.hight_table = 20
         self.size_table = 20
 
@@ -24,28 +31,27 @@ class Snake:
         self.flag_acceleration = False
         self.acceleration_end_time = time.time() + 10
 
-    def state(self, ):
-        '''Здесь будет статус сотояния тела в поле.
-        Проверка на столкновение: жива или нет.
-        Проверка выхода за границы.'''
+    def state(self, obstacles = None):
+        '''Проверка состояния змеи: жива ли змеи или нет.
 
-        #это весёлая ошибка
-        #когда змея длины 1 съедает яблоко она умирает из за плохо прописанного условия
-        if (self.head in self.position[1::] and self.snake_body!=2):
-            return False # змея мертва (врезалась в себя)'
+        1) Врезалась ли она сама в себя
+        2) Врезалась ли она в препятвие'''
 
-#        if (self.head[0] < 0 or self.head[0] >= self.size_table) or (self.head[1] < 0 or self.head[1] >= self.size_table):
-#            return False # змея мертва (вне поля)
-
-        return True # Все хорошо змея жива, пока что...'
-
+        if self.head in self.position[1::] and self.snake_body!=2:
+            return False
+        if obstacles is not None:
+            for obstacle in obstacles:
+                if self.head == obstacle['position']:
+                    return False
+        return True
 
 
     def simple_move(self):
-        '''Простое движение змеи, процесс, который длится до столкновения.
-        Перемещать змейку на одну клетку в текущем направлении.
-        Брать позицию головы и добавлять направление движения.
-        Обновлять переменную self.head.'''
+        '''Обичное движение змеи.
+        1) По х и по у создаем координатвы
+        2) Телпортирует змею вне поля
+        3) Добавлет "новую" голову
+        4) убирает хвост - послдений элемент'''
         nx = self.head[0] + self.direction[0] # Обновление позиции головы по х
         ny = self.head[1] + self.direction[1] # Обновление позиции головы по у
 

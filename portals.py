@@ -8,7 +8,7 @@ class Portals:
     После каждого использования порталы пересоздаются в новых местах.
     """
 
-    def __init__(self, width=15, height=15):
+    def __init__(self, width=20, height=20, obstacles=None, fruits=None, snake_body=None):
         self.width = width
         self.height = height
 
@@ -16,23 +16,28 @@ class Portals:
         self.portal_a = None
         self.portal_b = None
 
+        self.forbidden_positions = []
+        if obstacles:
+            self.forbidden_positions.extend(obstacle['position'] for obstacle in obstacles)
+        if fruits:
+            self.forbidden_positions.extend(fruit['position'] for fruit in fruits)
+        if snake_body:
+            self.forbidden_positions.extend(snake_body)
+
         self.generate_portals()
 
     def generate_portals(self):
         """Генерирует две новые разные клетки порталов."""
-        ax = randint(0, self.width - 1)
-        ay = randint(0, self.height - 1)
-
-        bx = randint(0, self.width - 1)
-        by = randint(0, self.height - 1)
-
-        # Порталы не должны совпадать
-        while bx == ax and by == ay:
-            bx = randint(0, self.width - 1)
-            by = randint(0, self.height - 1)
-
-        self.portal_a = (ax, ay)
-        self.portal_b = (bx, by)
+        while True:
+            ax, ay = randint(0, self.width - 1), randint(0, self.height - 1)
+            if (ax, ay) not in self.forbidden_positions:
+                self.portal_a = (ax, ay)
+                break
+        while True:
+            bx, by = randint(0, self.width - 1), randint(0, self.height - 1)
+            self.portal_b = (bx, by)
+            if self.portal_b != self.portal_a and self.portal_b not in self.forbidden_positions:
+                break
 
     def check_teleport(self, snake_head):
         """

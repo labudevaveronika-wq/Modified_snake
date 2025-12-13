@@ -13,7 +13,7 @@ class MovingObstacle:
     - не появляется во фруктах
     """
 
-    def __init__(self, width=15, height=15):
+    def __init__(self, width=20, height=20):
         self.width = width
         self.height = height
 
@@ -30,7 +30,6 @@ class MovingObstacle:
 
         self.generate([])  # создаём впервые
 
-    # ---------------------------------------------------------
     def generate(self, forbidden_positions):
         """Создаёт препятствие на краю, не заспавнившись во фрукте."""
         while True:
@@ -63,19 +62,18 @@ class MovingObstacle:
         self.spawn_time = time.time()
         self.move_start = None
 
-    # ---------------------------------------------------------
     def update(self, forbidden_positions):
         """Управляет фазами движения препятствия."""
         now = time.time()
 
-        # ---- Фаза ожидания ----
+
         if self.phase == "wait":
             if now - self.spawn_time >= self.wait_time:
                 self.phase = "move"
                 self.move_start = now
             return
 
-        # ---- Фаза движения ----
+
         if self.phase == "move":
             elapsed = now - self.move_start
 
@@ -101,7 +99,7 @@ class MovingObstacle:
 
             self.position = (px + dx * shift, py + dy * shift)
 
-    # ---------------------------------------------------------
+
     def get_position(self):
         """Возвращает целочисленную координату."""
         if self.position is None:

@@ -1,65 +1,84 @@
 from random import *
 
 class Food:
-    def __init__(self, count = 3, obstacles=None):
+    def __init__(self, count=0, obstacles=None):
         self.fruits = []
 
-        for i in range(count):
-            self.fruits.append(self.create_fruit(obstacles))
+        if obstacles:  # если obstacles не пусто и не None
+            self.obstacles = obstacles
+        else:  # если obstacles пустое или None
+            self.obstacles = []
 
+        for i in range(count):
+            fruit = self.create_fruit()
+            while fruit is None:
+                fruit = self.create_fruit()
+
+            self.fruits.append(fruit)
 
     def create_fruit(self,obstacles=None):
         '''Поменяю немного историю создания фруктов.
         именно тут они будут создаваться, а в spawn именно появляться на поле.
-        '''
-        '''фрукт мог заспавниться в стене или в другом фрукте'''
-        x = randint(0, 14)
-        y = randint(0, 14)
-        if (obstacles):
-            while (x, y) in obstacles or (x,y) in self.fruits:
-                    y = randint(0, 14)
-                    x = randint(0, 14)
-        # потом устанавливаем цвет по типу
-        # вроде гарантированный вариант разного цвета
-        if len(self.fruits) == 0:
-            fruit_type = "apple"
-        elif len(self.fruits) == 1:
-            fruit_type = "pear"
-        elif len(self.fruits) == 2:
-            fruit_type = "grape"
-        else:
-            fruit_type = choice(["apple", "pear", "grape"])
+        фрукт мог заспавниться в стене или в другом фрукте'''
 
-        if fruit_type == "apple":
-            color = "red"
-        elif fruit_type == "pear":
-            color = "green"
-        else:
-            color = "purple"
+        while True:
+            x = randint(0, 17)
+            y = randint(0, 17)
 
-        return {
-            'position': (x, y),
-            'type': fruit_type,
-            'color': color
-        }
+            position_occupied = False
+            for obstacle in self.obstacles:
+                if obstacle['position'] == (x, y):  # Сравниваем с нашими (x, y)
+                    position_occupied = True
+                    break
+
+            if not position_occupied:
+                for fruit in self.fruits:
+                    if fruit['position'] == (x, y):
+                        position_occupied = True
+                        break
+
+            if not position_occupied:
+                fruit_counts = {'apple': 0, 'pear': 0, 'grape': 0}
+                for fruit in self.fruits:
+                    fruit_counts[fruit['type']] += 1
+
+                min_count = min(fruit_counts.values())
+                available_types = []
+
+                for fruit_type, count in fruit_counts.items():
+                    if count == min_count:
+                        available_types.append(fruit_type)
+
+                fruit_type = choice(available_types)
+
+                if fruit_type == 'apple':
+                    color = "red"
+                elif fruit_type == 'pear':
+                    color = "green"
+                else:
+                    color = "purple"
+
+
+                return {
+                    'position': (x, y),
+                    'type': fruit_type,
+                    'color': color
+                }
 
     def spawn(self, fruits_index=None, obstacles=None): # появление рандомном месте
         '''Опишем создание и генерацаю трех фруктов на поле'''
+        if obstacles is not None:
+            self.obstacles = obstacles
+
         if fruits_index is not None:
-            self.fruits[fruits_index] = self.create_fruit(obstacles)
+            # Заменяем конкретный фрукт
+            self.fruits[fruits_index] = self.create_fruit()
         else:
-            self.fruits.append(self.create_fruit(obstacles))
-
-
+            # Добавляем новый фрукт
+            self.fruits.append(self.create_fruit())
 
     def get_all_fruits(self): # Возвращает все фрукты
         return self.fruits
-
-    def get_type(self): # получить тип еды для обработки эффект на змею
-        return self.type
-
-    def remove_fruits(self): # тут будет происходить удаление фрукта по его позиции и возвращение его типа
-        pass
 
 ## Тест
 #food = Food()

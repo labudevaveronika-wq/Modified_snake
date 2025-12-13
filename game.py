@@ -7,63 +7,66 @@ from portals import Portals
 from moving_obstacle import MovingObstacle
 from game_over_screen import GameOverScreen
 from snake_database import SnakeDatabase
-from menu import GameOverScreen
-
+from level_interface import main_menu
+import os
 
 class Game:
-    def __init__(self, level_num=1):
-        # Основные настройки окна
-        self.screen = pygame.display.set_mode((700, 700))
+    def __init__(self, level_num=1, play_name="Гость"):
+        pygame.init()
+
+        self.screen = pygame.display.set_mode((800, 860))
         pygame.display.set_caption("Snake")
 
-        # Уровень
+        self.panel_font = pygame.font.SysFont(None, 28)
+
+        self.panel_color = (30, 30, 30)  # Темно-серый цвет
+        self.panel_text_color = (220, 220, 220)  # Светло-серый текст
+
+        self.grid_size = 20  # 20x20 клеток
+        self.cell_size = 40
+        self.panel_height = 60
+
+        self.offset_x = 0
+        self.offset_y = 0
+
+        self.player_name = play_name
+
         self.level = level_num
 
-        # --- Создаём змейку ---
         self.snake = Snake()
 
-        # --- Статичные препятствия ---
-        # (7 случайных блоков, не должны появляться в змейке)
-        self.obstacles = Obstacle(7, self.snake.position)
+        self.obstacles = Obstacle(15, self.snake.position)
+        self.food = Food(10, self.obstacles.obstacles)
 
-        # --- Фрукты ---
-        # генерация 3 фруктов, не появляющихся в препятствиях
-        self.food = Food(3, self.obstacles.obstacles)
 
-        # --- Жизни ---
         if self.level == 3:
             self.lives = 3
+            self.moving_obstacle = MovingObstacle()
+
+            fruit_positions = [f["position"] for f in self.food.get_all_fruits()]
+            obstacle_positions = [o["position"] for o in self.obstacles.get_all_obstacles()]
+            forbidden = fruit_positions + obstacle_positions
+            self.moving_obstacle.generate(fruit_positions)
+            self.moving_obstacle.generate(forbidden)
         else:
             self.lives = 1
 
-        self.score = 0 # счет игрока, начало с нуля
-        # --- Порталы (только уровень 2) ---
+
         if self.level == 2:
-            from portals import Portals
+            self.portals = Portals(
+            width=self.grid_size,  # 20
+            height=self.grid_size,  # 20
+            obstacles=self.obstacles.get_all_obstacles(),
+            fruits=self.food.get_all_fruits(),
+            snake_body=self.snake.position
+            )
 
-            self.portals = Portals()
-        else:
-            self.portals = None
+        self.score = 0  # счётзмейка
 
-        # --- Движущееся препятствие (уровень 3) ---
-        if self.level == 3:
-            from moving_obstacle import MovingObstacle
-
-            self.moving_obstacle = MovingObstacle()
-
-            # позиции фруктов → запрещённые точки
-            fruit_positions = [f["position"] for f in self.food.get_all_fruits()]
-            self.moving_obstacle.generate(fruit_positions)
-        else:
-            self.moving_obstacle = None
-
-        # --- ИГРОВЫЕ ПАРАМЕТРЫ ---
-        self.ckore = 0  # счёт
-        self.life = True  # жива ли змейка
-
-        self.score = 0  # текущий счёт
+        self.life = True  # жива ли
+        # self.score = 0  # текущий счёт
         self.start_time = 0  # время начала игры
-        self.player_name = "Гость"  # имя игрока
+        # self.player_name = "Гость"  # имя игрока
         self.is_game_over = False  # флаг завершения игры
         self.play_time = 0  # время игры в секундах
 
@@ -71,9 +74,13 @@ class Game:
 
         self.game_over_screen = GameOverScreen(self.screen)
 
+#        self.panel_font = pygame.font.SysFont(None, 28)
+
     def run(self):
         '''Таким образом в run только вызов методов'''
         clock = pygame.time.Clock()
+        self.start_time = time.time()
+
 
         if self.player_name == "Гость":
             name = self.game_over_screen.show_name_input()
@@ -82,74 +89,136 @@ class Game:
                 if self.player_name != "Гость":
                     self.db.add_player(self.player_name)
             else:
+                pygame.quit()
                 return
 
-        self.start_time = time.time()
+        selected_level = self.choose_level()
+        if selected_level:
+            # Обновляем уровень и пересоздаем игровые объекты
+            self.level = selected_level
+            self.reinitialize_with_level(selected_level)
+        else:
+            return
 
-        while self.life == True: # проверка на жизнь змеи
-            self.events() # вызываем меропреятие (действие) из метода обработки нажатия клавиш или события
-            self.snake.simple_move()  # змея двигается
-        start_time = time.time()
-        attempts = 1
 
         while self.life:
             self.events()
             self.snake.simple_move()
             self.update()
             self.draw()
-            self.draw() # рисуем новый кадр
-
-            if not self.snake.state():
-                self.handle_game_over()
-                return
 
             if self.snake.flag_acceleration:
                 clock.tick(10)
             else:
                 clock.tick(5)
 
-        # ПОСЛЕ смерти — показать меню
-        play_time = time.time() - start_time
 
-        menu = GameOverScreen(self.screen)
-        action = menu.show(score=self.ckore, attempts=attempts, play_time=play_time)
+        self.play_time = int(time.time() - self.start_time)
+        print(f"Время игры: {self.play_time} сек, Счет: {self.score}")
 
-        if action == "retry":
-            return Game(self.level).run()
+        if self.player_name != "Гость":
+            success = self.db.save_game_result(self.player_name, self.score, self.play_time)
+            print(f"Сохранение результата для {self.player_name}: {'Успешно' if success else 'Ошибка'}")
 
-        if action == "menu":
-            from level_interface import main_menu
+        while True:
+            action = self.game_over_screen.show_game_over(
+                score=self.score,
+                player_name=self.player_name,
+                snake_length=len(self.snake.position),
+                play_time=self.play_time
+            )
 
-            return main_menu()
+            if action == "retry":
+                return Game(self.level, self.player_name).run()
+            if action == "rating":
+                top_players = self.db.get_top_players(10)
 
-        if action == "exit":
-            pygame.quit()
-            exit()
+                rating_action = self.game_over_screen.show_rating(top_players, self.player_name)
+
+                if rating_action == "back":
+                    continue
+                else:
+                    action = rating_action
+                    if action == "exit":
+                        pygame.quit()
+                        exit()
+                    elif action == "menu":
+#                        from level_interface import main_menu
+                        return main_menu()
+                    continue
+
+            if action == "exit":
+                pygame.quit()
+                exit()
+            return None
+
+    def show_main_menu(self):
+        """Показать главное меню"""
+        from level_interface import main_menu
+        return main_menu()
+
+    def choose_level(self):
+        """Показать экран выбора уровня"""
+        from level_interface import show_level_selection
+
+        # Нужно создать функцию show_level_selection в level_interface.py
+        return show_level_selection(self.screen)
+
+    def reinitialize_with_level(self, level_num):
+        """Переинициализировать игру с новым уровнем"""
+        # Обновляем уровень
+        self.level = level_num
+
+        # Обновляем жизни
+        if self.level == 3:
+            self.lives = 3
+        else:
+            self.lives = 1
+
+        # Обновляем порталы
+        if self.level == 2:
+            self.portals = Portals()
+        else:
+            self.portals = None
+
+        # Обновляем движущееся препятствие
+        if self.level == 3:
+            from moving_obstacle import MovingObstacle
+            self.moving_obstacle = MovingObstacle()
+            fruit_positions = [f["position"] for f in self.food.get_all_fruits()]
+            obstacle_positions = [o["position"] for o in self.obstacles.get_all_obstacles()]
+            forbidden = fruit_positions + obstacle_positions
+            self.moving_obstacle.generate(forbidden)
+        else:
+            self.moving_obstacle = None
+
+
 
     def events(self):  # проверять все от клавиш до эффектов
         """Проверять все события pygame
         Если событие "закрытие окна" - останавливать игру
         Если нажата клавиша - определять какая именно
         Если нажаты стрелки - менять направление змейки"""
-        for (
-            event
-        ) in (
-            pygame.event.get()
-        ):  # проыерить событие: что именно случилось, кнопка или закрытие окна
+        for (event) in (pygame.event.get()):  # проыерить событие: что именно случилось, кнопка или закрытие окна
             if event.type == pygame.QUIT:  # если нажат крестик для закрытия окна
                 self.life = False
             # добавляю управление змеей с помощью кнопок - стрелок
             # проверка на нажатие стрелок
             if event.type == pygame.KEYDOWN:
+                # print(f"Нажата клавиша: {event.key}")
                 if event.key == pygame.K_DOWN:  # вниз
                     self.snake.moving((0, +1))
-                if event.key == pygame.K_UP:  # вверх
+                elif event.key == pygame.K_UP:  # вверх
                     self.snake.moving((0, -1))
-                if event.key == pygame.K_LEFT:  # влево
+                elif event.key == pygame.K_LEFT:  # влево
                     self.snake.moving((-1, 0))
-                if event.key == pygame.K_RIGHT:  # вправо
+                elif event.key == pygame.K_RIGHT:  # вправо
                     self.snake.moving((1, 0))
 
+
+                elif event.key == pygame.K_r:
+                    # print("R нажата! Очищаю базу...")
+                    self.db.clear_db()
 
             # надо добавить проверку на то, что змея съедает фрукт
 
@@ -157,7 +226,6 @@ class Game:
         '''Двигать змейку вперед
         Проверять столкновение змейки с едой
         Проверять столкновение змейки с собой или границами
-        Проверять столкновение с препятсвием.
         Если змейка съела еду - увеличивать счет и создавать новую еду'''
         self.snake.update_boost()
         # проверка на столкновение с любым фруктом
@@ -184,24 +252,45 @@ class Game:
                     self.snake.evolution_score = 0  # сбрасываем счетчик
                 break
 
-        for obstacle in self.obstacles.get_all_obstacles():
-            head_rect = pygame.Rect(
-                self.snake.head[0] * 40, self.snake.head[1] * 40, 40, 40
-            )
-            obstacle_rect = pygame.Rect(
-                obstacle["position"][0] * 40,
-                obstacle["position"][1] * 40,
-                obstacle["width"],
-                obstacle["height"],
-            )
 
-            if head_rect.colliderect(obstacle_rect):
-                self.life = False
-                break
-
-        if not self.snake.state():
+        if not self.snake.state(self.obstacles.get_all_obstacles()):
             self.life = False
 
+        # Проверка телепортации (для уровня 2)
+        if self.level == 2 and self.portals is not None:
+            teleport_to = self.portals.check_teleport(self.snake.head)
+            if teleport_to:
+                self.snake.head = teleport_to
+                self.snake.position[0] = teleport_to
+
+    def draw_panel(self):
+        panel_rect = pygame.Rect(0, 0, 800, 80)
+        pygame.draw.rect(self.screen, self.panel_color, panel_rect)
+
+        current_time = int(time.time() - self.start_time)
+
+        hours = current_time // 3600
+        minutes = (current_time % 3600) // 60
+        seconds = current_time % 60
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+        name_text = self.panel_font.render(f"Игрок: {self.player_name}", True, self.panel_text_color)
+        score_text = self.panel_font.render(f"Счет: {self.score}", True, self.panel_text_color)
+        time_text = self.panel_font.render(f"Время: {time_str}", True, self.panel_text_color)
+
+        self.screen.blit(name_text, (20, 40 - name_text.get_height() // 2))
+
+        # Центр - счет
+        self.screen.blit(score_text, (
+            self.screen.get_width() // 2 - score_text.get_width() // 2,
+            self.panel_height // 2 - score_text.get_height() // 2
+        ))
+
+        # Правая часть - время
+        self.screen.blit(time_text, (
+            self.screen.get_width() - time_text.get_width() - 20,
+            self.panel_height // 2 - time_text.get_height() // 2
+        ))
     def draw(self):
         '''Залить экран черным цветом
         Нарисовать змейку (по координатам из snake.position)
@@ -210,93 +299,90 @@ class Game:
 
         self.screen.fill(pygame.Color('black')) # залили экран черным
 
+        self.draw_panel()
+
         # отрисовка препятствий
         for obstacle in self.obstacles.get_all_obstacles():
-            # эту строчку удалить
-            # obstacle_rect = pygame.Rect(obstacle['position'][0] * 40, obstacle['position'][1] * 40, obstacle['width'], obstacle['height'])
             image = pygame.image.load("obstacle.png").convert_alpha()
-            new_image = pygame.transform.scale(image, (40, 40))
+            new_image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
             self.screen.blit(
-                new_image, (obstacle["position"][0] * 40, obstacle["position"][1] * 40)
-            )
-            # эту строчку надо удалить
-            # pygame.draw.rect(self.screen, obstacle['color'], obstacle_rect)
-
-        for position in self.snake.position:
-            square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
-            """position[0] * 40 - координата X (позиция змейки × 40 пикселей) 
-            position[1] * 40 - координата Y (позиция змейки × 40 пикселей)
-            40, 40 - ширина и высота прямоугольника (40×40 пикселей)"""
-
-            pygame.draw.rect(self.screen, pygame.Color("green"), square)
-            """self.screen - на каком окне рисовать
-            self.snake.snake_color - каким цветом (зеленый)
-            rect - какой прямоугольник рисовать"""
-
-        # ----- Отрисовка движущегося препятствия -----
-        if self.level == 3 and self.moving_obstacle is not None:
-            ox, oy = self.moving_obstacle.get_position()
-            rect = pygame.Rect(ox * 40, oy * 40, 40, 40)
-            pygame.draw.rect(self.screen, (200, 200, 50), rect)
+                new_image, (obstacle["position"][0] * self.cell_size + self.offset_x,
+             obstacle["position"][1] * self.cell_size + self.offset_y + 80)
+        )
 
         for fruit in self.food.get_all_fruits():
-            # эту строчку надо удалить
-            # food_rect = pygame.Rect(fruit['position'][0] * 40, fruit['position'][1] * 40, 40, 40) # то же самое для еды
             if fruit["color"] == "red":
                 image = pygame.image.load("apple.png").convert_alpha()
-                new_image = pygame.transform.scale(image, (40, 40))
             elif fruit["color"] == "green":
                 image = pygame.image.load("pear.png").convert_alpha()
-                new_image = pygame.transform.scale(image, (40, 40))
             else:
                 image = pygame.image.load("grape.png").convert_alpha()
-                new_image = pygame.transform.scale(image, (40, 40))
+            new_image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
             self.screen.blit(
-                new_image, (fruit["position"][0] * 40, fruit["position"][1] * 40)
-            )
-            # эту строчку надо удалить
-            # pygame.draw.rect(self.screen, color, food_rect)
+            new_image,
+            (fruit["position"][0] * self.cell_size + self.offset_x,
+             fruit["position"][1] * self.cell_size + self.offset_y+80)
+        )
+
+        if self.level == 3 and self.moving_obstacle is not None:
+            ox, oy = self.moving_obstacle.get_position()
+            rect = pygame.Rect(
+            ox * self.cell_size + self.offset_x,
+            oy * self.cell_size + self.offset_y + 80,
+            self.cell_size,
+            self.cell_size
+        )
+
+            pygame.draw.rect(self.screen, (200, 200, 50), rect)
 
         for position in self.snake.position:
+            # Выбираем цвет в зависимости от состояния
             if self.snake.flag_acceleration:
-                color = (0, 255, 0)  # ярко-зеленый при ускорении
-            else:
-                color = (0, 200, 0)  # обычный зеленый
-
-            square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
-            pygame.draw.rect(self.screen, color, square)
-
-        for position in self.snake.position:
-            # Используем цвет эволюции
-            if self.snake.flag_acceleration:
+                # Ярче при ускорении
                 color = (
                     min(255, self.snake.snake_color[0] + 50),
                     min(255, self.snake.snake_color[1] + 50),
-                    min(255, self.snake.snake_color[2] + 50),
-                )  # ярче при ускорении
+                    min(255, self.snake.snake_color[2] + 50)
+                )
             else:
-                color = self.snake.snake_color  # обычный цвет эволюции
+                # Обычный цвет эволюции
+                color = self.snake.snake_color
+
+            # Рисуем клетку змейки
+            square = pygame.Rect(
+                position[0] * self.cell_size + self.offset_x,
+                position[1] * self.cell_size + self.offset_y + 80,
+                self.cell_size,
+                self.cell_size
+            )
+            pygame.draw.rect(self.screen, color, square)
 
             if self.level == 2 and self.portals is not None:
                 pa, pb = self.portals.get_portals()
 
-                # отрисовать порталы голубым цветом
                 pygame.draw.rect(
                     self.screen,
                     (0, 0, 255),
-                    pygame.Rect(pa[0] * 40, pa[1] * 40, 40, 40),
+                    pygame.Rect(
+                        pa[0] * self.cell_size + self.offset_x,
+                        pa[1] * self.cell_size + self.offset_y + 80,
+                        self.cell_size,
+                        self.cell_size
+                    )
                 )
 
                 pygame.draw.rect(
                     self.screen,
                     (0, 0, 200),
-                    pygame.Rect(pb[0] * 40, pb[1] * 40, 40, 40),
+                    pygame.Rect(
+                        pb[0] * self.cell_size + self.offset_x,
+                        pb[1] * self.cell_size + self.offset_y + 80,
+                        self.cell_size,
+                        self.cell_size
+                    )
                 )
 
-            square = pygame.Rect(position[0] * 40, position[1] * 40, 40, 40)
-            pygame.draw.rect(self.screen, color, square)
-
-        pygame.display.flip()  # тут обновляем экарн
+            pygame.display.flip()  # тут обновляем экарн
 
 
 
@@ -305,11 +391,11 @@ class Game:
 # print("Окно создано!")
 # print("Змейка создана:", game.snake)
 # print("Еда создана:", game.food)
-# print("Счет:", game.ckore)
+# print("Счет:", game.score)
 
 # тест отрисовки
-# game = Game()
-# game.run()
+game = Game()
+game.run()
 # поначалу вот такой вывод для этого теста:
 # pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
 # Hello from the pygame community. https://www.pygame.org/contribute.html
@@ -320,10 +406,9 @@ class Game:
 # print("Змейка:", game.snake.position)
 # print("Еда:", game.food.position)
 
-from level_interface import main_menu
 
-if __name__ == "__main__":
-    main_menu()
+# if __name__ == "__main__":
+#     main_menu()
 
 # обнаружена проблема (неточность): фрукты должны исчезать моментально как только змея на них наедет, но у меня так не происходит. Пытаемся исправить. змея двигается юлагодаря методу Run, а взимодействие с едой осуществляется в spawn, надо поменять порядок их осществления
 # Проблема решена: в run изменили порядок методов

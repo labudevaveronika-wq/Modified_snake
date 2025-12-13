@@ -8,7 +8,7 @@ pygame.init()
 class GameOverScreen:
     def __init__(self, screen):
         self.screen = screen
-        self.width, self.height = screen.get_size()
+        self.width, self.height = 800, 800
 
         self.big_font = pygame.font.SysFont("arial", 60, bold=True)
         self.font = pygame.font.SysFont("arial", 32, bold=True)
@@ -40,7 +40,6 @@ class GameOverScreen:
     def draw_small_button(self, x, y, text, width=180, height=60):
         """Отрисовка маленькой прямоугольной кнопки"""
 
-
         rect = pygame.Rect(x, y, width, height)
         pygame.draw.rect(self.screen, self.button_color, rect, border_radius=15)
         pygame.draw.rect(self.screen, (255, 255, 255), rect, 3, border_radius=15)
@@ -51,11 +50,6 @@ class GameOverScreen:
         self.screen.blit(label, (lx, ly))
 
         return rect
-
-
-
-
-
 
 
 
@@ -86,7 +80,9 @@ class GameOverScreen:
 
             # Заголовок
             title = self.big_font.render(" ВВЕДИТЕ ВАШЕ ИМЯ ", True, (0, 255, 127) )
-            self.screen.blit(title, (self.width // 2 - title.get_width() // 2, 180))
+            title_1 = self.big_font.render(" (не более 6ти симвлов) ", True, (0, 255, 127))
+            self.screen.blit(title, (self.width // 2 - title.get_width() // 2, 120))
+            self.screen.blit(title_1, (self.width // 2 - title_1.get_width() // 2, 180))
 
             # Поле ввода
             input_rect = pygame.Rect(self.width // 2 - 200, 280, 400, 60)
@@ -97,11 +93,6 @@ class GameOverScreen:
             text_surface = self.font.render(input_text if input_text else "Печайтате здесь...", True, (255, 255, 255) if input_text else (100, 100, 100))
             self.screen.blit(text_surface, (input_rect.x + 20, input_rect.y + 15))
 
-            # Инструкция
-            inst1 = self.small_font.render("Press ENTER to confirm", True, (150, 150, 150))
-            inst2 = self.small_font.render("Press ESC to play as Guest", True, (150, 150, 150))
-            self.screen.blit(inst1, (self.width // 2 - inst1.get_width() // 2, 380))
-            self.screen.blit(inst2, (self.width // 2 - inst2.get_width() // 2, 420))
 
             pygame.display.flip()
             clock.tick(60)
@@ -125,7 +116,6 @@ class GameOverScreen:
     def show_game_over(self, score=0, player_name="Гость", snake_length=0, play_time=0.0):
         """Показать экран завершения игры с кнопками"""
         clock = pygame.time.Clock()
-        panel = pygame.Rect(100, 80, self.width - 200, self.height - 160)
 
         while True:
             for event in pygame.event.get():
@@ -138,8 +128,6 @@ class GameOverScreen:
                         return "retry"
                     if b_rating.collidepoint(mx, my):
                         return "rating"
-                    if b_menu.collidepoint(mx, my):
-                        return "menu"
                     if b_exit.collidepoint(mx, my):
                         return "exit"
 
@@ -147,9 +135,10 @@ class GameOverScreen:
 
             # Заголовок
             title = self.big_font.render("...RIP...", True, (100, 100, 100))
+            self.screen.blit(title, (self.width // 2 - title.get_width() // 2, 80))
 
             # Статистика игры
-            stats_y = 200
+            stats_y = 180
             stats = [
                 f"Игрок: {player_name}",
                 f"Счет: {score}",
@@ -162,29 +151,19 @@ class GameOverScreen:
                 self.screen.blit(text, (self.width // 2 - text.get_width() // 2, stats_y))
                 stats_y += 50
 
-            # Кнопки
-            bx = self.width // 2 - 250
-            by = 450
-
-            b_retry = self.draw_button(bx, by, "↻")
-            b_rating = self.draw_button(bx + 140, by, "🏆", (255, 215, 0))  # золотой
-            b_menu = self.draw_button(bx + 280, by, "≡", (100, 255, 100))  # зелёный
-            b_exit = self.draw_button(bx + 420, by, "X", (255, 100, 100))  # красный
-
-            # Подписи под кнопками
-            labels = ["Play again", "Rating", "Menu", "Exit"]
-            label_x = bx - 10
-            for i, label in enumerate(labels):
-                lbl = self.small_font.render(label, True, (200, 200, 200))
-                self.screen.blit(lbl, (label_x + i * 140, by + 140))
+            # Кнопки - ПО ЦЕНТРУ БЕЗ ПОДПИСЕЙ
+            b_retry = self.draw_button(200, 450, "AGAIN", (255, 215, 100))
+            b_rating = self.draw_button(340, 450, "TOP", (255, 215, 100))
+            b_exit = self.draw_button(480, 450, "EXIT", (255, 100, 100))
 
             pygame.display.flip()
             clock.tick(60)
 
+
     def show_rating(self, top_players, current_player):
         """Показать таблицу рейтинга"""
         clock = pygame.time.Clock()
-#        panel = pygame.Rect(50, 50, self.width - 100, self.height - 100)
+        rating_font = pygame.font.SysFont("arial", 24, bold=True)
 
         while True:
             for event in pygame.event.get():
@@ -205,12 +184,12 @@ class GameOverScreen:
             self.screen.blit(title, (self.width // 2 - title.get_width() // 2, 70))
 
             # Заголовки таблицы
-            headers = ["МЕСТО", "ИГРОК", "РЕКОРД", "ВСЕГО ОЧКОВ"]
-            x_positions = [100, 250, 450, 600]
+            headers = ["МЕСТО", "ИГРОК", "РЕКОРД", "ВСЕГО ОЧКОВ", "ВРЕМЯ"]
+            x_positions = [50, 200, 350, 500, 690]
 
             y_pos = 160
             for header, x in zip(headers, x_positions):
-                text = self.font.render(header, True, (0, 200, 255))
+                text = rating_font.render(header, True, (0, 200, 255))
                 self.screen.blit(text, (x, y_pos))
 
             y_pos = 220
@@ -219,7 +198,8 @@ class GameOverScreen:
                 for i, player in enumerate(top_players, 1):
                     username = player[0]
                     best_score = player[1]
-                    total_score = player[2] if len(player) > 2 else 0
+                    total_score = player[2]
+                    total_time = player[3]
 
                     # Выделяем текущего игрока
                     if username == current_player:
@@ -230,33 +210,32 @@ class GameOverScreen:
                         prefix = ""
 
                     # Ранг
-                    rank_text = self.font.render(f"{prefix}{i}", True, color)
+                    rank_text = rating_font.render(f"{prefix}{i}", True, color)
                     self.screen.blit(rank_text, (x_positions[0], y_pos))
 
                     # Имя
                     name_display = username[:12] + "..." if len(username) > 12 else username
-                    name_text = self.font.render(f"{prefix}{name_display}", True, color)
+                    name_text = rating_font.render(f"{prefix}{name_display}", True, color)
                     self.screen.blit(name_text, (x_positions[1], y_pos))
 
                     # Лучший счёт
-                    best_text = self.font.render(f"{prefix}{best_score}", True, color)
+                    best_text = rating_font.render(f"{prefix}{best_score}", True, color)
                     self.screen.blit(best_text, (x_positions[2], y_pos))
 
                     # Всего очков
-                    total_text = self.font.render(f"{prefix}{total_score}", True, color)
+                    total_text = rating_font.render(f"{prefix}{total_score}", True, color)
                     self.screen.blit(total_text, (x_positions[3], y_pos))
+
+                    time_text = rating_font.render(f"{prefix}{total_time}с", True, color)
+                    self.screen.blit(time_text, (x_positions[4], y_pos))
 
                     y_pos += 50
             else:
-                no_data = self.font.render("Игроков еще нет..", True, (150, 150, 150))
+                no_data = rating_font.render("Игроков еще нет..", True, (150, 150, 150))
                 self.screen.blit(no_data, (self.width // 2 - no_data.get_width() // 2, 250))
 
             # Кнопка "Назад"
-            back_button = self.draw_small_button(self.width // 2 - 90, self.height - 120, "BACK")
-
-            # Инструкция
-            inst = self.small_font.render("Press ESC or click BACK to return", True, (150, 150, 150))
-            self.screen.blit(inst, (self.width // 2 - inst.get_width() // 2, self.height - 180))
+            back_button = self.draw_small_button(self.width // 2 - 90, 720, "BACK")
 
             pygame.display.flip()
             clock.tick(60)

@@ -4,9 +4,6 @@ import datetime
 
 class SnakeDatabase:
     def __init__(self, db_name ='snake_game.db'):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(current_dir, db_name)
-
         self.con = sqlite3.connect(db_name)
         self.cursor = self.con.cursor()
         self.create_tables()
@@ -50,11 +47,17 @@ class SnakeDatabase:
         return True
 
     def save_game_result(self, username, score, play_time):
-        self.cursor.execute("SELECT id FROM players WHERE username =?", (username,))
+        # print(f"Сохранение: {username}, счет: {score}, время: {play_time}")
+
+        self.cursor.execute("SELECT id, best_score FROM players WHERE username = ?", (username,))
         player = self.cursor.fetchone()
+
+        # print(f"Результат запроса: {player}")
         if not player:
+            # print(f"Игрок {username} не найден в базе!")
             return False
-        player_id = player[0]
+        else:
+            player_id = player[0]
 
         self.cursor.execute('''
             UPDATE players 
@@ -63,8 +66,7 @@ class SnakeDatabase:
                 best_score = MAX(best_score, ?)
             WHERE id = ?''', (score, play_time, score, player_id))
 
-        self.cursor.execute('''
-            INSERT INTO game_sessions (player_id, score, play_time) VALUES (?, ?, ?) ''', (player_id, score, play_time))
+        self.cursor.execute('''INSERT INTO game_sessions (player_id, score, play_time) VALUES (?, ?, ?) ''', (player_id, score, play_time))
 
         self.con.commit()
 
@@ -81,15 +83,31 @@ class SnakeDatabase:
             WHERE username = ?
         ''', (username,))
 
-        result = self.cursor.fetchone()
-
-        if result:
+        if self.cursor.fetchone():
             return {
-                'username': result[0],
-                'best_score': result[1],
-                'total_score': result[2],
-                'total_time': result[3]
+                'username': self.cursor.fetchone()[0],
+                'best_score': self.cursor.fetchone()[1],
+                'total_score': self.cursor.fetchone()[2],
+                'total_time': self.cursor.fetchone()[3]
             }
         return None
+
+    def get_top_players(self, limit=10):
+        """Получить топ игроков по лучшему счету"""
+        self.cursor.execute('''
+            SELECT username, best_score, score_all, time_all, last_played 
+            FROM players 
+            ORDER BY best_score DESC 
+            LIMIT ?
+        ''', (limit,))
+        return self.cursor.fetchall()
+
+    def clear_db(self):
+        self.cursor.execute("DELETE FROM game_sessions")
+        self.cursor.execute("DELETE FROM players")
+        self.cursor.execute("DELETE FROM sqlite_sequence")
+        self.con.commit()
+        return True
+
 
 
