@@ -88,7 +88,7 @@ class Game:
             name = self.game_over_screen.show_name_input()
             if name:
                 self.player_name = name
-                if self.player_name=="andrei the beast":
+                if self.player_name=="veronika dasha andre":
                     self.flag_cheat=True
                     self.snake.flag_cheat=True
                     self.snake.flag_acceleration = True
