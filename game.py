@@ -41,7 +41,6 @@ class Game:
         self.key_history = []
         self.flag_cheat = False
 
-
         if self.level == 3:
             self.lives = 3
             self.moving_obstacle = MovingObstacle()
@@ -89,6 +88,11 @@ class Game:
             name = self.game_over_screen.show_name_input()
             if name:
                 self.player_name = name
+                if self.player_name=="andrei the beast":
+                    self.flag_cheat=True
+                    self.snake.flag_cheat=True
+                    self.snake.flag_acceleration = True
+                    self.snake.acceleration_end_time = time.time() + 1000000000
                 if self.player_name != "Гость":
                     self.db.add_player(self.player_name)
             else:
@@ -218,12 +222,11 @@ class Game:
                 elif event.key == pygame.K_RIGHT:  # вправо
                     self.snake.moving((1, 0))
 
+
                 elif event.key == pygame.K_q:
                     # print("Q нажата! Очищаю базу...")
                     self.db.clear_db()
-
                 self.handle_cheats(event.key)
-
             # надо добавить проверку на то, что змея съедает фрукт
     def handle_cheats(self, key):
         self.key_history.append(key)
@@ -311,6 +314,16 @@ class Game:
         Отобразить счет игрока на экране'''
 
         self.screen.fill(pygame.Color('black')) # залили экран черным
+        background_image = pygame.image.load("background.png").convert_alpha() #задний фон
+        background_image = pygame.transform.scale(background_image, (self.cell_size*20, self.cell_size*20))
+        self.screen.blit(background_image, (0, 0))
+        filter_surface = pygame.Surface(background_image.get_size())
+        filter_surface.fill((0, 0, 0))  # Синий цвет
+        filter_surface.set_alpha(200)  # Прозрачность (0-255)
+        self.screen.blit(filter_surface, (0, 0))  # Затем накладываем фильтр
+
+
+
 
         self.draw_panel()
 
@@ -318,6 +331,7 @@ class Game:
         for obstacle in self.obstacles.get_all_obstacles():
             image = pygame.image.load("obstacle.png").convert_alpha()
             new_image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
+            new_image.set_colorkey((0, 0, 0))
             self.screen.blit(
                 new_image, (obstacle["position"][0] * self.cell_size + self.offset_x,
              obstacle["position"][1] * self.cell_size + self.offset_y + 80)
@@ -331,6 +345,7 @@ class Game:
             else:
                 image = pygame.image.load("grape.png").convert_alpha()
             new_image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
+            new_image.set_colorkey((0, 0, 0))
             self.screen.blit(
             new_image,
             (fruit["position"][0] * self.cell_size + self.offset_x,
@@ -344,9 +359,16 @@ class Game:
             oy * self.cell_size + self.offset_y + 80,
             self.cell_size,
             self.cell_size
-        )
-
+            )
             pygame.draw.rect(self.screen, (200, 200, 50), rect)
+
+
+        snake_image = pygame.image.load("snake.png").convert_alpha()
+        snake_image = pygame.transform.scale(snake_image, (self.cell_size, self.cell_size))
+        snake_image_head = pygame.image.load("snake_head.png").convert_alpha()
+        snake_image_head = pygame.transform.scale(snake_image_head, (self.cell_size, self.cell_size))
+        portal_image = pygame.image.load("portal.png").convert_alpha()
+        portal_image =pygame.transform.scale(portal_image,(self.cell_size,self.cell_size))
 
         for position in self.snake.position:
             # Выбираем цвет в зависимости от состояния
@@ -368,32 +390,40 @@ class Game:
                 self.cell_size,
                 self.cell_size
             )
-            pygame.draw.rect(self.screen, color, square)
+
+            if position==self.snake.head:
+                snake_image_head.set_colorkey((0, 0, 0))
+                if self.snake.direction==(1,0):
+                    snake_image_head=pygame.transform.rotate(snake_image_head,270)
+                if self.snake.direction==(-1,0):
+                    snake_image_head=pygame.transform.rotate(snake_image_head,90)
+                if self.snake.direction==(0,1):
+                    snake_image_head=pygame.transform.rotate(snake_image_head,180)
+                self.screen.blit(snake_image_head, square)
+            else: # задний фон
+                self.screen.blit(snake_image, square)
+                snake_filter_surface = pygame.Surface(background_image.get_size())
+                snake_filter_surface.fill(color)  # цвет змеи
+                snake_filter_surface.set_alpha(100)  # Прозрачность (0-255)
+                self.screen.blit(snake_filter_surface, square,(40,40,40,40)) # отрисовка фильтра
 
             if self.level == 2 and self.portals is not None:
                 pa, pb = self.portals.get_portals()
-
-                pygame.draw.rect(
-                    self.screen,
-                    (0, 0, 255),
-                    pygame.Rect(
-                        pa[0] * self.cell_size + self.offset_x,
-                        pa[1] * self.cell_size + self.offset_y + 80,
-                        self.cell_size,
-                        self.cell_size
-                    )
+                square_pa=pygame.Rect(
+                    pa[0] * self.cell_size + self.offset_x,
+                    pa[1] * self.cell_size + self.offset_y + 80,
+                    self.cell_size,
+                    self.cell_size
                 )
-
-                pygame.draw.rect(
-                    self.screen,
-                    (0, 0, 200),
-                    pygame.Rect(
-                        pb[0] * self.cell_size + self.offset_x,
-                        pb[1] * self.cell_size + self.offset_y + 80,
-                        self.cell_size,
-                        self.cell_size
-                    )
+                self.screen.blit(portal_image, square_pa)
+                square_pb = pygame.Rect(
+                    pb[0] * self.cell_size + self.offset_x,
+                    pb[1] * self.cell_size + self.offset_y + 80,
+                    self.cell_size,
+                    self.cell_size
                 )
+                self.screen.blit(portal_image, square_pb)
+
 
             pygame.display.flip()  # тут обновляем экарн
 
