@@ -14,7 +14,7 @@ class Game:
     def __init__(self, level_num=1, play_name="Гость"):
         pygame.init()
 
-        self.screen = pygame.display.set_mode((800, 860))
+        self.screen = pygame.display.set_mode((800, 840))
         pygame.display.set_caption("Snake")
 
         self.panel_font = pygame.font.SysFont(None, 28)
@@ -37,6 +37,9 @@ class Game:
 
         self.obstacles = Obstacle(15, self.snake.position)
         self.food = Food(10, self.obstacles.obstacles)
+
+        self.key_history = []
+        self.flag_cheat = False
 
 
         if self.level == 3:
@@ -215,12 +218,22 @@ class Game:
                 elif event.key == pygame.K_RIGHT:  # вправо
                     self.snake.moving((1, 0))
 
-
-                elif event.key == pygame.K_r:
-                    # print("R нажата! Очищаю базу...")
+                elif event.key == pygame.K_q:
+                    # print("Q нажата! Очищаю базу...")
                     self.db.clear_db()
 
+                self.handle_cheats(event.key)
+
             # надо добавить проверку на то, что змея съедает фрукт
+    def handle_cheats(self, key):
+        self.key_history.append(key)
+        if len(self.key_history) > 5:
+            self.key_history.pop(0)
+        if self.key_history == [100, 114, 101, 97, 109]:
+            self.flag_cheat = True
+            self.snake.flag_cheat = True
+
+            self.key_history = []
 
     def update(self):
         '''Двигать змейку вперед
@@ -278,18 +291,18 @@ class Game:
         score_text = self.panel_font.render(f"Счет: {self.score}", True, self.panel_text_color)
         time_text = self.panel_font.render(f"Время: {time_str}", True, self.panel_text_color)
 
-        self.screen.blit(name_text, (20, 40 - name_text.get_height() // 2))
+        self.screen.blit(name_text, (20, 45 - name_text.get_height() // 2))
 
         # Центр - счет
         self.screen.blit(score_text, (
             self.screen.get_width() // 2 - score_text.get_width() // 2,
-            self.panel_height // 2 - score_text.get_height() // 2
+            45 - score_text.get_height() // 2
         ))
 
         # Правая часть - время
         self.screen.blit(time_text, (
             self.screen.get_width() - time_text.get_width() - 20,
-            self.panel_height // 2 - time_text.get_height() // 2
+            45 - time_text.get_height() // 2
         ))
     def draw(self):
         '''Залить экран черным цветом

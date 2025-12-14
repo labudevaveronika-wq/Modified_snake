@@ -12,7 +12,6 @@ class Snake:
          флаг для ускорения,
          время окончанич ускорения'''
 
-
         self.snake_body = 3
         self.hight_table = 20
         self.size_table = 20
@@ -31,6 +30,8 @@ class Snake:
         self.flag_acceleration = False
         self.acceleration_end_time = time.time() + 10
 
+        self.flag_cheat = False
+
     def state(self, obstacles = None):
         '''Проверка состояния змеи: жива ли змеи или нет.
 
@@ -39,10 +40,14 @@ class Snake:
 
         if self.head in self.position[1::] and self.snake_body!=2:
             return False
+
         if obstacles is not None:
             for obstacle in obstacles:
                 if self.head == obstacle['position']:
-                    return False
+                    if self.flag_cheat == True:
+                        return True
+                    else:
+                        return False
         return True
 
 
@@ -57,7 +62,7 @@ class Snake:
 
         # телепортация через границы
         nx = nx % self.size_table
-        ny = ny % self.hight_table
+        ny = ny % (self.hight_table-1)
 
         self.position.insert(0, (nx, ny)) # Добавление "новой головы" в змею
 
