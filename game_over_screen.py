@@ -76,7 +76,7 @@ class GameOverScreen:
                         if len(input_text) < 20 and event.unicode.isprintable():
                             input_text += event.unicode
 
-            self.screen.fill((255, 248, 220))
+            self.screen.fill((0, 0, 0))
 
             # Заголовок
             title = self.big_font.render(" ВВЕДИТЕ ВАШЕ ИМЯ ", True, (0, 255, 127) )
@@ -86,7 +86,7 @@ class GameOverScreen:
 
             # Поле ввода
             input_rect = pygame.Rect(self.width // 2 - 200, 280, 400, 60)
-            pygame.draw.rect(self.screen, (255, 248, 220), input_rect)
+            pygame.draw.rect(self.screen, (0, 0, 0), input_rect)
             pygame.draw.rect(self.screen, (0, 200, 255), input_rect, 4)
 
             # Текст в поле
