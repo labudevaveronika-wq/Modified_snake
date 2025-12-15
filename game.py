@@ -317,7 +317,7 @@ class Game:
 
         self.screen.fill(pygame.Color('black')) # залили экран черным
         background_image = pygame.image.load("background.png").convert_alpha() #задний фон
-        background_image = pygame.transform.scale(background_image, (self.cell_size*20, self.cell_size*20))
+        background_image = pygame.transform.scale(background_image, (self.cell_size*20, self.cell_size*25))
         self.screen.blit(background_image, (0, 0))
         filter_surface = pygame.Surface(background_image.get_size())
         filter_surface.fill((0, 0, 0))  # Синий цвет

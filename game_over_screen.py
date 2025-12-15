@@ -90,7 +90,7 @@ class GameOverScreen:
             pygame.draw.rect(self.screen, (0, 200, 255), input_rect, 4)
 
             # Текст в поле
-            text_surface = self.font.render(input_text if input_text else "Печайтате здесь...", True, (0, 0, 0) if input_text else (100, 100, 100))
+            text_surface = self.font.render(input_text if input_text else "Печайтате здесь...", True, (255, 255, 255) if input_text else (100, 100, 100))
             self.screen.blit(text_surface, (input_rect.x + 20, input_rect.y + 15))
 
 
