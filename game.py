@@ -8,8 +8,12 @@ from moving_obstacle import MovingObstacle
 from game_over_screen import GameOverScreen
 from snake_database import SnakeDatabase
 from level_interface import main_menu
-import os
 
+# Инициализирует все игровые объекты
+# Управляет игровым циклом
+# Координирует взаимодействие между всеми компонентами
+# Обрабатывает ввод пользователя
+# Отображает всё на экране
 class Game:
     def __init__(self, level_num=1, play_name="Гость"):
         pygame.init()
@@ -24,7 +28,7 @@ class Game:
 
         self.grid_size = 20  # 20x20 клеток
         self.cell_size = 40
-        self.panel_height = 60
+        self.panel_height = 80
 
         self.offset_x = 0
         self.offset_y = 0
@@ -117,11 +121,9 @@ class Game:
 
 
         self.play_time = int(time.time() - self.start_time)
-        print(f"Время игры: {self.play_time} сек, Счет: {self.score}")
 
         if self.player_name != "Гость":
             success = self.db.save_game_result(self.player_name, self.score, self.play_time)
-            print(f"Сохранение результата для {self.player_name}: {'Успешно' if success else 'Ошибка'}")
 
         while True:
             action = self.game_over_screen.show_game_over(
