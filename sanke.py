@@ -88,7 +88,7 @@ class Snake:
                 self.position.pop()
         if food_type == 'grape':
             self.flag_acceleration = True
-            self.acceleration_end_time = time.time() + 10
+            self.acceleration_end_time = max(time.time() + 10,self.acceleration_end_time)
             '''Активация ускорение для змеи'''
 
         return  food_type
