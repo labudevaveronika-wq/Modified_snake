@@ -356,13 +356,16 @@ class Game:
 
         if self.level == 3 and self.moving_obstacle is not None:
             ox, oy = self.moving_obstacle.get_position()
+            image_moving=pygame.image.load("moving_obstacle.png").convert_alpha()
+            image_moving = pygame.transform.scale(image_moving, (self.cell_size, self.cell_size))
+            #image_moving.set_colorkey((255,255,255))
             rect = pygame.Rect(
             ox * self.cell_size + self.offset_x,
             oy * self.cell_size + self.offset_y + 80,
             self.cell_size,
             self.cell_size
             )
-            pygame.draw.rect(self.screen, (200, 200, 50), rect)
+            self.screen.blit(image_moving, rect)
 
 
         snake_image = pygame.image.load("snake.png").convert_alpha()
